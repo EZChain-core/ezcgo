@@ -227,8 +227,8 @@ func FromConfig(config *Config) ([]byte, ids.ID, error) {
 	}
 	{
 		avax := avm.AssetDefinition{
-			Name:         "Avalanche",
-			Symbol:       "AVAX",
+			Name:         "ROIChain",
+			Symbol:       "ROI",
 			Denomination: 9,
 			InitialState: map[string][]interface{}{},
 		}
