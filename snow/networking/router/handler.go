@@ -18,6 +18,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
 	"github.com/ava-labs/avalanchego/utils/uptime"
+	"github.com/ava-labs/avalanchego/version"
 )
 
 var errDuplicatedContainerID = errors.New("inbound message contains duplicated container ID")
@@ -69,7 +70,7 @@ func (h *Handler) Initialize(
 	h.validators = validators
 	var lock sync.Mutex
 	h.unprocessedMsgsCond = sync.NewCond(&lock)
-	h.cpuTracker = tracker.NewCPUTracker(uptime.IntervalFactory{}, defaultCPUInterval)
+	h.cpuTracker = tracker.NewCPUTracker(uptime.ContinuousFactory{}, defaultCPUInterval)
 	var err error
 	h.unprocessedMsgs, err = newUnprocessedMsgs(h.ctx.Log, h.validators, h.cpuTracker, "handler", h.ctx.Registerer)
 	return err
@@ -186,10 +187,13 @@ func (h *Handler) handleMsg(msg message.InboundMessage) error {
 	case message.Notify:
 		vmMsg := msg.Get(message.VMMessage).(uint32)
 		err = h.engine.Notify(common.Message(vmMsg))
+
 	case message.GossipRequest:
 		err = h.engine.Gossip()
+
 	case message.Timeout:
 		err = h.engine.Timeout()
+
 	default:
 		err = h.handleConsensusMsg(msg)
 	}
@@ -231,7 +235,7 @@ func (h *Handler) handleConsensusMsg(msg message.InboundMessage) error {
 		if err != nil {
 			h.ctx.Log.Debug("Malformed message %s from (%s, %s, %d) dropped. Error: %s",
 				msg.Op(), nodeID, h.engine.Context().ChainID, reqID, err)
-			return nil
+			return h.engine.GetAcceptedFrontierFailed(nodeID, reqID)
 		}
 		return h.engine.AcceptedFrontier(nodeID, reqID, containerIDs)
 
@@ -255,7 +259,7 @@ func (h *Handler) handleConsensusMsg(msg message.InboundMessage) error {
 		if err != nil {
 			h.ctx.Log.Debug("Malformed message %s from (%s, %s, %d) dropped. Error: %s",
 				msg.Op(), nodeID, h.engine.Context().ChainID, reqID, err)
-			return nil
+			return h.engine.GetAcceptedFailed(nodeID, reqID)
 		}
 		return h.engine.Accepted(nodeID, reqID, containerIDs)
 
@@ -332,12 +336,13 @@ func (h *Handler) handleConsensusMsg(msg message.InboundMessage) error {
 		if err != nil {
 			h.ctx.Log.Debug("Malformed message %s from (%s, %s, %d) dropped. Error: %s",
 				msg.Op(), nodeID, h.engine.Context().ChainID, reqID, err)
-			return nil
+			return h.engine.QueryFailed(nodeID, reqID)
 		}
 		return h.engine.Chits(nodeID, reqID, votes)
 
 	case message.Connected:
-		return h.engine.Connected(nodeID)
+		peerVersion := msg.Get(message.VersionStruct).(version.Application)
+		return h.engine.Connected(nodeID, peerVersion)
 
 	case message.Disconnected:
 		return h.engine.Disconnected(nodeID)
@@ -362,7 +367,7 @@ func (h *Handler) handleConsensusMsg(msg message.InboundMessage) error {
 		if !ok {
 			h.ctx.Log.Debug("Malformed message %s from (%s, %s, %d) dropped. Error: could not parse AppBytes",
 				msg.Op(), nodeID, h.engine.Context().ChainID, reqID)
-			return nil
+			return h.engine.AppRequestFailed(nodeID, reqID)
 		}
 		return h.engine.AppResponse(nodeID, reqID, appBytes)
 

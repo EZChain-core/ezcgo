@@ -940,7 +940,7 @@ func (st *internalStateImpl) writeCurrentStakers() error {
 
 	for _, tx := range st.deletedCurrentStakers {
 		var (
-			db       database.KeyValueWriter
+			db       database.KeyValueDeleter
 			subnetID ids.ID
 			nodeID   ids.ShortID
 			weight   uint64
@@ -1017,6 +1017,19 @@ func (st *internalStateImpl) writeCurrentStakers() error {
 				delete(nodeUpdates, nodeID)
 				continue
 			}
+
+			if subnetID == constants.PrimaryNetworkID || st.vm.WhitelistedSubnets.Contains(subnetID) {
+				var err error
+				if nodeDiff.Decrease {
+					err = st.vm.Validators.RemoveWeight(subnetID, nodeID, nodeDiff.Amount)
+				} else {
+					err = st.vm.Validators.AddWeight(subnetID, nodeID, nodeDiff.Amount)
+				}
+				if err != nil {
+					return err
+				}
+			}
+
 			nodeDiffBytes, err := GenesisCodec.Marshal(CodecVersion, nodeDiff)
 			if err != nil {
 				return err
@@ -1030,6 +1043,15 @@ func (st *internalStateImpl) writeCurrentStakers() error {
 		}
 		st.validatorDiffsCache.Put(string(prefixBytes), nodeUpdates)
 	}
+
+	// Attempt to update the stake metrics
+	primaryValidators, ok := st.vm.Validators.GetValidators(constants.PrimaryNetworkID)
+	if !ok {
+		return nil
+	}
+	weight, _ := primaryValidators.GetWeight(st.vm.ctx.NodeID)
+	st.vm.localStake.Set(float64(weight))
+	st.vm.totalStake.Set(float64(primaryValidators.Weight()))
 	return nil
 }
 
@@ -1055,7 +1077,7 @@ func (st *internalStateImpl) writePendingStakers() error {
 	st.addedPendingStakers = nil
 
 	for _, tx := range st.deletedPendingStakers {
-		var db database.KeyValueWriter
+		var db database.KeyValueDeleter
 		switch tx.UnsignedTx.(type) {
 		case *UnsignedAddValidatorTx:
 			db = st.pendingValidatorList

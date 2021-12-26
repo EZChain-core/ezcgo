@@ -1,5 +1,67 @@
 # Release Notes
 
+## [v1.7.3](https://github.com/ava-labs/avalanchego/releases/tag/v1.7.3)
+
+This version is backwards compatible to [v1.7.0](https://github.com/ava-labs/avalanchego/releases/tag/v1.7.0). It is optional, but encouraged.
+
+### Consensus
+
+- Introduced a notion of vertex conflicts that will be used in future X-chain improvements.
+
+### Coreth
+
+- Added an index mapping height to the list of accepted atomic transactions at that height. Generating this index will cause the node to take approximately 2 minutes longer to startup the C-Chain for the first restart.
+- Fixed bug in base fee estimation API that impacted custom defined networks.
+- Decreased minimum transaction re-gossiping interval from 1s to 500ms.
+- Removed websocket handler from the static vm APIs.
+
+### Database
+
+- Reduced lock contention in `prefixDB`s.
+
+### Networking
+
+- Increase the gossip size from `6` to `10` validators.
+- Prioritized `Connected` and `Disconnected` messages in the message handler.
+
+### Miscellaneous
+
+- Notified VMs of peer versions on `Connected`.
+- Fixed acceptance broadcasting over IPC.
+- Fixed 32-bit architecture builds for AvalancheGo (not Coreth).
+
+## [v1.7.2](https://github.com/ava-labs/avalanchego/releases/tag/v1.7.2)
+
+This version is backwards compatible to [v1.7.0](https://github.com/ava-labs/avalanchego/releases/tag/v1.7.0). It is optional, but encouraged.
+
+### Coreth
+
+- Fixed memory leak in the estimate gas API.
+- Reduced the default RPC gas limit to 50,000,000 gas.
+- Improved RPC logging.
+- Removed pre-AP5 legacy code.
+
+### PlatformVM
+
+- Optimized validator set change calculations.
+- Removed storage of non-decided blocks.
+- Simplified error handling.
+- Removed pre-AP5 legacy code.
+
+### Networking
+
+- Explicitly fail requests with responses that failed to be parsed.
+- Removed pre-AP5 legacy code.
+
+### Configs
+
+- Introduced the ability for a delayed graceful node shutdown.
+- Added the ability to take all configs as environment variables for containerized deployments.
+
+### Utils
+
+- Fixed panic bug in logging library when importing from external projects.
+
 ## [v1.7.1](https://github.com/ava-labs/avalanchego/releases/tag/v1.7.1)
 
 This update is backwards compatible with [v1.7.0](https://github.com/ava-labs/avalanchego/releases/tag/v1.7.0). Please see the expected update times in the v1.7.0 release.
