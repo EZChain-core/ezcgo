@@ -105,16 +105,16 @@ type Client interface {
 		controlKeys []string,
 		threshold uint32,
 	) (ids.ID, error)
-	// ExportAVAX issues an ExportTx transaction and returns the txID
-	ExportAVAX(
+	// ExportEZC issues an ExportTx transaction and returns the txID
+	ExportEZC(
 		user api.UserPass,
 		from []string,
 		changeAddr string,
 		to string,
 		amount uint64,
 	) (ids.ID, error)
-	// ImportAVAX issues an ImportTx transaction and returns the txID
-	ImportAVAX(
+	// ImportEZC issues an ImportTx transaction and returns the txID
+	ImportEZC(
 		user api.UserPass,
 		from []string,
 		changeAddr,
@@ -419,7 +419,7 @@ func (c *client) CreateSubnet(
 	return res.TxID, err
 }
 
-func (c *client) ExportAVAX(
+func (c *client) ExportEZC(
 	user api.UserPass,
 	from []string,
 	changeAddr string,
@@ -427,7 +427,7 @@ func (c *client) ExportAVAX(
 	amount uint64,
 ) (ids.ID, error) {
 	res := &api.JSONTxID{}
-	err := c.requester.SendRequest("exportAVAX", &ExportAVAXArgs{
+	err := c.requester.SendRequest("exportEZC", &ExportEZCArgs{
 		JSONSpendHeader: api.JSONSpendHeader{
 			UserPass:       user,
 			JSONFromAddrs:  api.JSONFromAddrs{From: from},
@@ -439,7 +439,7 @@ func (c *client) ExportAVAX(
 	return res.TxID, err
 }
 
-func (c *client) ImportAVAX(
+func (c *client) ImportEZC(
 	user api.UserPass,
 	from []string,
 	changeAddr,
@@ -447,7 +447,7 @@ func (c *client) ImportAVAX(
 	sourceChain string,
 ) (ids.ID, error) {
 	res := &api.JSONTxID{}
-	err := c.requester.SendRequest("importAVAX", &ImportAVAXArgs{
+	err := c.requester.SendRequest("importEZC", &ImportEZCArgs{
 		JSONSpendHeader: api.JSONSpendHeader{
 			UserPass:       user,
 			JSONFromAddrs:  api.JSONFromAddrs{From: from},
