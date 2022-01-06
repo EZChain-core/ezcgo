@@ -1441,8 +1441,8 @@ func (service *Service) CreateSubnet(_ *http.Request, args *CreateSubnetArgs, re
 	return errs.Err
 }
 
-// ExportAVAXArgs are the arguments to ExportAVAX
-type ExportAVAXArgs struct {
+// ExportEZCArgs are the arguments to ExportEZC
+type ExportEZCArgs struct {
 	// User, password, from addrs, change addr
 	api.JSONSpendHeader
 
@@ -1454,10 +1454,10 @@ type ExportAVAXArgs struct {
 	To string `json:"to"`
 }
 
-// ExportAVAX exports AVAX from the P-Chain to the X-Chain
+// ExportEZC exports AVAX from the P-Chain to the X-Chain
 // It must be imported on the X-Chain to complete the transfer
-func (service *Service) ExportAVAX(_ *http.Request, args *ExportAVAXArgs, response *api.JSONTxIDChangeAddr) error {
-	service.vm.ctx.Log.Debug("Platform: ExportAVAX called")
+func (service *Service) ExportEZC(_ *http.Request, args *ExportEZCArgs, response *api.JSONTxIDChangeAddr) error {
+	service.vm.ctx.Log.Debug("Platform: ExportEZC called")
 
 	if args.Amount == 0 {
 		return errNoAmount
@@ -1541,8 +1541,8 @@ func (service *Service) ExportAVAX(_ *http.Request, args *ExportAVAXArgs, respon
 	return errs.Err
 }
 
-// ImportAVAXArgs are the arguments to ImportAVAX
-type ImportAVAXArgs struct {
+// ImportEZCArgs are the arguments to ImportEZC
+type ImportEZCArgs struct {
 	// User, password, from addrs, change addr
 	api.JSONSpendHeader
 
@@ -1553,10 +1553,10 @@ type ImportAVAXArgs struct {
 	To string `json:"to"`
 }
 
-// ImportAVAX issues a transaction to import AVAX from the X-chain. The AVAX
+// ImportEZC issues a transaction to import AVAX from the X-chain. The AVAX
 // must have already been exported from the X-Chain.
-func (service *Service) ImportAVAX(_ *http.Request, args *ImportAVAXArgs, response *api.JSONTxIDChangeAddr) error {
-	service.vm.ctx.Log.Debug("Platform: ImportAVAX called")
+func (service *Service) ImportEZC(_ *http.Request, args *ImportEZCArgs, response *api.JSONTxIDChangeAddr) error {
+	service.vm.ctx.Log.Debug("Platform: ImportEZC called")
 
 	// Parse the sourceCHain
 	chainID, err := service.vm.ctx.BCLookup.Lookup(args.SourceChain)
