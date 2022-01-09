@@ -42,25 +42,18 @@ type MutableState interface {
 
 	AddRewardUTXO(txID ids.ID, utxo *avax.UTXO)
 	GetRewardUTXOs(txID ids.ID) ([]*avax.UTXO, error)
-
 	GetTimestamp() time.Time
 	SetTimestamp(time.Time)
-
 	GetCurrentSupply() uint64
 	SetCurrentSupply(uint64)
-
 	GetCurrentStakeSupply() uint64
 	SetCurrentStakeSupply(uint64)
-
 	GetCurrentRewardSupply() uint64
 	SetCurrentRewardSupply(uint64)
-
 	GetSubnets() ([]*Tx, error)
 	AddSubnet(createSubnetTx *Tx)
-
 	GetChains(subnetID ids.ID) ([]*Tx, error)
 	AddChain(createChainTx *Tx)
-
 	GetTx(txID ids.ID) (*Tx, Status, error)
 	AddTx(tx *Tx, status Status)
 }

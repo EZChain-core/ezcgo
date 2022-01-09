@@ -130,7 +130,13 @@ pendingStakerLoop:
 			)
 
 			currentSupply, err = safemath.Add64(currentSupply, r)
+			if err != nil {
+				return nil, nil, err
+			}
 			currentStakeSupply, err = safemath.Add64(currentStakeSupply, staker.Validator.Wght)
+			if err != nil {
+				return nil, nil, err
+			}
 			currenrtRewardSupply, err = safemath.Add64(currenrtRewardSupply, r)
 			if err != nil {
 				return nil, nil, err
@@ -154,7 +160,13 @@ pendingStakerLoop:
 			)
 
 			currentSupply, err = safemath.Add64(currentSupply, r)
+			if err != nil {
+				return nil, nil, err
+			}
 			currentStakeSupply, err = safemath.Add64(currentStakeSupply, staker.Validator.Wght)
+			if err != nil {
+				return nil, nil, err
+			}
 			currenrtRewardSupply, err = safemath.Add64(currenrtRewardSupply, r)
 			if err != nil {
 				return nil, nil, err

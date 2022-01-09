@@ -36,13 +36,10 @@ type Block interface {
 	snowman.Block
 
 	getInnerBlk() snowman.Block
-
 	verifyPreForkChild(child *preForkBlock) error
 	verifyPostForkChild(child *postForkBlock) error
 	verifyPostForkOption(child *postForkOption) error
-
 	buildChild() (Block, error)
-
 	pChainHeight() (uint64, error)
 }
 

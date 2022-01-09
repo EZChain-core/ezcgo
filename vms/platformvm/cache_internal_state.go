@@ -43,12 +43,12 @@ var (
 	chainPrefix           = []byte("chain")
 	singletonPrefix       = []byte("singleton")
 
-	timestampKey     = []byte("timestamp")
-	currentSupplyKey = []byte("current supply")
-	currentStakeSupplyKey = []byte("current stake supply")
+	timestampKey           = []byte("timestamp")
+	currentSupplyKey       = []byte("current supply")
+	currentStakeSupplyKey  = []byte("current stake supply")
 	currentRewardSupplyKey = []byte("current reward supply")
-	lastAcceptedKey  = []byte("last accepted")
-	initializedKey   = []byte("initialized")
+	lastAcceptedKey        = []byte("last accepted")
+	initializedKey         = []byte("initialized")
 
 	errWrongNetworkID = errors.New("tx has wrong network ID")
 
@@ -76,25 +76,18 @@ type InternalState interface {
 	uptime.State
 
 	SetHeight(height uint64)
-
 	AddCurrentStaker(tx *Tx, potentialReward uint64)
 	DeleteCurrentStaker(tx *Tx)
 	GetValidatorWeightDiffs(height uint64, subnetID ids.ID) (map[ids.ShortID]*ValidatorWeightDiff, error)
-
 	AddPendingStaker(tx *Tx)
 	DeletePendingStaker(tx *Tx)
-
 	SetCurrentStakerChainState(currentStakerChainState)
 	SetPendingStakerChainState(pendingStakerChainState)
-
 	GetLastAccepted() ids.ID
 	SetLastAccepted(ids.ID)
-
 	GetBlock(blockID ids.ID) (Block, error)
 	AddBlock(block Block)
-
 	UTXOIDs(addr []byte, start ids.ID, limit int) ([]ids.ID, error)
-
 	Abort()
 	Commit() error
 	CommitBatch() (database.Batch, error)
@@ -214,10 +207,10 @@ type internalStateImpl struct {
 	chainDBCache cache.Cacher     // cache of subnetID -> linkedDB
 	chainDB      database.Database
 
-	originalTimestamp, timestamp         time.Time
+	originalTimestamp, timestamp                                                  time.Time
 	originalCurrentSupply, currentSupply, currentStakeSupply, currentRewardSupply uint64
-	originalLastAccepted, lastAccepted   ids.ID
-	singletonDB                          database.Database
+	originalLastAccepted, lastAccepted                                            ids.ID
+	singletonDB                                                                   database.Database
 }
 
 type ValidatorWeightDiff struct {
@@ -450,11 +443,15 @@ func (st *internalStateImpl) SetTimestamp(timestamp time.Time) { st.timestamp = 
 func (st *internalStateImpl) GetCurrentSupply() uint64              { return st.currentSupply }
 func (st *internalStateImpl) SetCurrentSupply(currentSupply uint64) { st.currentSupply = currentSupply }
 
-func (st *internalStateImpl) GetCurrentStakeSupply() uint64              { return st.currentStakeSupply }
-func (st *internalStateImpl) SetCurrentStakeSupply(currentStakeSupply uint64) { st.currentStakeSupply = currentStakeSupply }
+func (st *internalStateImpl) GetCurrentStakeSupply() uint64 { return st.currentStakeSupply }
+func (st *internalStateImpl) SetCurrentStakeSupply(currentStakeSupply uint64) {
+	st.currentStakeSupply = currentStakeSupply
+}
 
-func (st *internalStateImpl) GetCurrentRewardSupply() uint64              { return st.currentRewardSupply }
-func (st *internalStateImpl) SetCurrentRewardSupply(currentRewardSupply uint64) { st.currentRewardSupply = currentRewardSupply }
+func (st *internalStateImpl) GetCurrentRewardSupply() uint64 { return st.currentRewardSupply }
+func (st *internalStateImpl) SetCurrentRewardSupply(currentRewardSupply uint64) {
+	st.currentRewardSupply = currentRewardSupply
+}
 
 func (st *internalStateImpl) GetLastAccepted() ids.ID             { return st.lastAccepted }
 func (st *internalStateImpl) SetLastAccepted(lastAccepted ids.ID) { st.lastAccepted = lastAccepted }
@@ -1041,7 +1038,6 @@ func (st *internalStateImpl) writeCurrentStakers() error {
 				}
 			}
 
-
 			nodeDiffBytes, err := GenesisCodec.Marshal(CodecVersion, nodeDiff)
 			if err != nil {
 				return err
@@ -1607,9 +1603,14 @@ func (st *internalStateImpl) init(genesisBytes []byte) error {
 		)
 
 		newCurrentSupply, err := safemath.Add64(currentSupply, r)
+		if err != nil {
+			return err
+		}
 		newCurrentStakeSupply, err := safemath.Add64(currentStakeSupply, stakeAmount)
+		if err != nil {
+			return err
+		}
 		newCurrentRewardSupply, err := safemath.Add64(currentRewardSupply, r)
-
 		if err != nil {
 			return err
 		}
@@ -1619,7 +1620,6 @@ func (st *internalStateImpl) init(genesisBytes []byte) error {
 		st.SetCurrentSupply(newCurrentSupply)
 		st.SetCurrentStakeSupply(newCurrentStakeSupply)
 		st.SetCurrentRewardSupply(newCurrentRewardSupply)
-
 	}
 
 	for _, chain := range genesis.Chains {
