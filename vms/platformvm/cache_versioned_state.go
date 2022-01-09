@@ -49,6 +49,12 @@ type MutableState interface {
 	GetCurrentSupply() uint64
 	SetCurrentSupply(uint64)
 
+	GetCurrentStakeSupply() uint64
+	SetCurrentStakeSupply(uint64)
+
+	GetCurrentRewardSupply() uint64
+	SetCurrentRewardSupply(uint64)
+
 	GetSubnets() ([]*Tx, error)
 	AddSubnet(createSubnetTx *Tx)
 
@@ -75,6 +81,10 @@ type versionedStateImpl struct {
 	timestamp time.Time
 
 	currentSupply uint64
+
+	currentStakeSupply uint64
+
+	currentRewardSupply uint64
 
 	addedSubnets  []*Tx
 	cachedSubnets []*Tx
@@ -113,6 +123,8 @@ func newVersionedState(
 		pendingStakerChainState: pending,
 		timestamp:               ps.GetTimestamp(),
 		currentSupply:           ps.GetCurrentSupply(),
+		currentStakeSupply:      ps.GetCurrentStakeSupply(),
+		currentRewardSupply:     ps.GetCurrentRewardSupply(),
 	}
 }
 
@@ -130,6 +142,22 @@ func (vs *versionedStateImpl) GetCurrentSupply() uint64 {
 
 func (vs *versionedStateImpl) SetCurrentSupply(currentSupply uint64) {
 	vs.currentSupply = currentSupply
+}
+
+func (vs *versionedStateImpl) GetCurrentStakeSupply() uint64 {
+	return vs.currentStakeSupply
+}
+
+func (vs *versionedStateImpl) SetCurrentStakeSupply(currentStakeSupply uint64) {
+	vs.currentStakeSupply = currentStakeSupply
+}
+
+func (vs *versionedStateImpl) SetCurrentRewardSupply(currentRewardSupply uint64) {
+	vs.currentRewardSupply = currentRewardSupply
+}
+
+func (vs *versionedStateImpl) GetCurrentRewardSupply() uint64 {
+	return vs.currentRewardSupply
 }
 
 func (vs *versionedStateImpl) GetSubnets() ([]*Tx, error) {

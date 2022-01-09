@@ -64,7 +64,7 @@ const (
 	MaxValidatorWeightFactor uint64 = 5
 
 	// SupplyCap is the maximum amount of AVAX that should ever exist
-	SupplyCap = 720 * units.MegaAvax
+	SupplyCap = 1000 * units.MegaAvax
 
 	// Maximum future start time for staking/delegating
 	maxFutureStartTime = 24 * 7 * 2 * time.Hour

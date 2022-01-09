@@ -45,6 +45,8 @@ var (
 
 	timestampKey     = []byte("timestamp")
 	currentSupplyKey = []byte("current supply")
+	currentStakeSupplyKey = []byte("current stake supply")
+	currentRewardSupplyKey = []byte("current reward supply")
 	lastAcceptedKey  = []byte("last accepted")
 	initializedKey   = []byte("initialized")
 
@@ -147,6 +149,8 @@ type InternalState interface {
  *   |-- initializedKey -> nil
  *   |-- timestampKey -> timestamp
  *   |-- currentSupplyKey -> currentSupply
+ *   |-- currentStakeSupplyKey -> currentStakeSupply
+ *   |-- currentRewardSupplyKey -> currentRewardSupply
  *   '-- lastAcceptedKey -> lastAccepted
  */
 type internalStateImpl struct {
@@ -211,7 +215,7 @@ type internalStateImpl struct {
 	chainDB      database.Database
 
 	originalTimestamp, timestamp         time.Time
-	originalCurrentSupply, currentSupply uint64
+	originalCurrentSupply, currentSupply, currentStakeSupply, currentRewardSupply uint64
 	originalLastAccepted, lastAccepted   ids.ID
 	singletonDB                          database.Database
 }
@@ -256,6 +260,7 @@ func newInternalStateDatabases(vm *VM, db database.Database) *internalStateImpl 
 	rewardUTXODB := prefixdb.New(rewardUTXOsPrefix, baseDB)
 	utxoDB := prefixdb.New(utxoPrefix, baseDB)
 	subnetBaseDB := prefixdb.New(subnetPrefix, baseDB)
+
 	return &internalStateImpl{
 		vm: vm,
 
@@ -444,6 +449,12 @@ func (st *internalStateImpl) SetTimestamp(timestamp time.Time) { st.timestamp = 
 
 func (st *internalStateImpl) GetCurrentSupply() uint64              { return st.currentSupply }
 func (st *internalStateImpl) SetCurrentSupply(currentSupply uint64) { st.currentSupply = currentSupply }
+
+func (st *internalStateImpl) GetCurrentStakeSupply() uint64              { return st.currentStakeSupply }
+func (st *internalStateImpl) SetCurrentStakeSupply(currentStakeSupply uint64) { st.currentStakeSupply = currentStakeSupply }
+
+func (st *internalStateImpl) GetCurrentRewardSupply() uint64              { return st.currentRewardSupply }
+func (st *internalStateImpl) SetCurrentRewardSupply(currentRewardSupply uint64) { st.currentRewardSupply = currentRewardSupply }
 
 func (st *internalStateImpl) GetLastAccepted() ids.ID             { return st.lastAccepted }
 func (st *internalStateImpl) SetLastAccepted(lastAccepted ids.ID) { st.lastAccepted = lastAccepted }
@@ -1030,6 +1041,7 @@ func (st *internalStateImpl) writeCurrentStakers() error {
 				}
 			}
 
+
 			nodeDiffBytes, err := GenesisCodec.Marshal(CodecVersion, nodeDiff)
 			if err != nil {
 				return err
@@ -1239,6 +1251,14 @@ func (st *internalStateImpl) writeSingletons() error {
 		if err := database.PutUInt64(st.singletonDB, currentSupplyKey, st.currentSupply); err != nil {
 			return err
 		}
+		// add stake supply when current supply change
+		if err := database.PutUInt64(st.singletonDB, currentStakeSupplyKey, st.currentStakeSupply); err != nil {
+			return err
+		}
+		// add reward supply when current supply change
+		if err := database.PutUInt64(st.singletonDB, currentRewardSupplyKey, st.currentRewardSupply); err != nil {
+			return err
+		}
 		st.originalCurrentSupply = st.currentSupply
 	}
 	if st.originalLastAccepted != st.lastAccepted {
@@ -1272,8 +1292,21 @@ func (st *internalStateImpl) loadSingletons() error {
 	if err != nil {
 		return err
 	}
+
+	currentStakeSupply, err := database.GetUInt64(st.singletonDB, currentStakeSupplyKey)
+	if err != nil {
+		return err
+	}
+
+	currentRewardSupply, err := database.GetUInt64(st.singletonDB, currentRewardSupplyKey)
+	if err != nil {
+		return err
+	}
+
 	st.originalCurrentSupply = currentSupply
 	st.currentSupply = currentSupply
+	st.currentStakeSupply = currentStakeSupply
+	st.currentRewardSupply = currentRewardSupply
 
 	lastAccepted, err := database.GetID(st.singletonDB, lastAcceptedKey)
 	if err != nil {
@@ -1549,6 +1582,10 @@ func (st *internalStateImpl) init(genesisBytes []byte) error {
 	st.SetTimestamp(genesisTime)
 	st.SetCurrentSupply(genesis.InitialSupply)
 
+	// init stake zero
+	st.SetCurrentStakeSupply(0)
+	st.SetCurrentRewardSupply(0)
+
 	// Persist primary network validator set at genesis
 	for _, vdrTx := range genesis.Validators {
 		tx, ok := vdrTx.UnsignedTx.(*UnsignedAddValidatorTx)
@@ -1559,14 +1596,20 @@ func (st *internalStateImpl) init(genesisBytes []byte) error {
 		stakeAmount := tx.Validator.Wght
 		stakeDuration := tx.Validator.Duration()
 		currentSupply := st.GetCurrentSupply()
+		currentStakeSupply := st.GetCurrentStakeSupply()
+		currentRewardSupply := st.GetCurrentRewardSupply()
 
-		r := reward(
-			stakeDuration,
-			stakeAmount,
-			currentSupply,
-			st.vm.StakeMintingPeriod,
+		r := rewardEZC(
+			uint(stakeDuration.Seconds()),
+			fromEZC(float64(stakeAmount)),
+			fromEZC(float64(currentStakeSupply)),
+			fromEZC(float64(currentSupply)),
 		)
+
 		newCurrentSupply, err := safemath.Add64(currentSupply, r)
+		newCurrentStakeSupply, err := safemath.Add64(currentStakeSupply, stakeAmount)
+		newCurrentRewardSupply, err := safemath.Add64(currentRewardSupply, r)
+
 		if err != nil {
 			return err
 		}
@@ -1574,6 +1617,9 @@ func (st *internalStateImpl) init(genesisBytes []byte) error {
 		st.AddCurrentStaker(vdrTx, r)
 		st.AddTx(vdrTx, Committed)
 		st.SetCurrentSupply(newCurrentSupply)
+		st.SetCurrentStakeSupply(newCurrentStakeSupply)
+		st.SetCurrentRewardSupply(newCurrentRewardSupply)
+
 	}
 
 	for _, chain := range genesis.Chains {
