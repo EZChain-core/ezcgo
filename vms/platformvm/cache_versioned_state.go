@@ -325,6 +325,8 @@ func (vs *versionedStateImpl) SetBase(parentState MutableState) {
 func (vs *versionedStateImpl) Apply(is InternalState) {
 	is.SetTimestamp(vs.timestamp)
 	is.SetCurrentSupply(vs.currentSupply)
+	is.SetCurrentStakeSupply(vs.currentStakeSupply)
+	is.SetCurrentRewardSupply(vs.currentRewardSupply)
 	for _, subnet := range vs.addedSubnets {
 		is.AddSubnet(subnet)
 	}
