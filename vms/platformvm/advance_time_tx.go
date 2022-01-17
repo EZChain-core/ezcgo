@@ -102,6 +102,8 @@ func (tx *UnsignedAdvanceTimeTx) Execute(
 	}
 
 	currentSupply := parentState.GetCurrentSupply()
+	currentStakeSupply := parentState.GetCurrentStakeSupply()
+	currenrtRewardSupply := parentState.GetCurrentRewardSupply()
 
 	pendingStakers := parentState.PendingStakerChainState()
 	toAddValidatorsWithRewardToCurrent := []*validatorReward(nil)
@@ -120,13 +122,22 @@ pendingStakerLoop:
 				break pendingStakerLoop
 			}
 
-			r := reward(
-				staker.Validator.Duration(),
-				staker.Validator.Wght,
-				currentSupply,
-				vm.StakeMintingPeriod,
+			r := rewardEZC(
+				uint(staker.Validator.Duration().Seconds()),
+				fromEZC(float64(staker.Validator.Wght)),
+				fromEZC(float64(currentStakeSupply)),
+				fromEZC(float64(currentSupply)),
 			)
+
 			currentSupply, err = safemath.Add64(currentSupply, r)
+			if err != nil {
+				return nil, nil, err
+			}
+			currentStakeSupply, err = safemath.Add64(currentStakeSupply, staker.Validator.Wght)
+			if err != nil {
+				return nil, nil, err
+			}
+			currenrtRewardSupply, err = safemath.Add64(currenrtRewardSupply, r)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -141,13 +152,22 @@ pendingStakerLoop:
 				break pendingStakerLoop
 			}
 
-			r := reward(
-				staker.Validator.Duration(),
-				staker.Validator.Wght,
-				currentSupply,
-				vm.StakeMintingPeriod,
+			r := rewardEZC(
+				uint(staker.Validator.Duration().Seconds()),
+				fromEZC(float64(staker.Validator.Wght)),
+				fromEZC(float64(currentStakeSupply)),
+				fromEZC(float64(currentSupply)),
 			)
+
 			currentSupply, err = safemath.Add64(currentSupply, r)
+			if err != nil {
+				return nil, nil, err
+			}
+			currentStakeSupply, err = safemath.Add64(currentStakeSupply, staker.Validator.Wght)
+			if err != nil {
+				return nil, nil, err
+			}
+			currenrtRewardSupply, err = safemath.Add64(currenrtRewardSupply, r)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -208,6 +228,8 @@ currentStakerLoop:
 	onCommitState := newVersionedState(parentState, newlyCurrentStakers, newlyPendingStakers)
 	onCommitState.SetTimestamp(txTimestamp)
 	onCommitState.SetCurrentSupply(currentSupply)
+	onCommitState.SetCurrentStakeSupply(currentStakeSupply)
+	onCommitState.SetCurrentRewardSupply(currenrtRewardSupply)
 
 	// State doesn't change if this proposal is aborted
 	onAbortState := newVersionedState(parentState, currentStakers, pendingStakers)
