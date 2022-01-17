@@ -42,19 +42,18 @@ type MutableState interface {
 
 	AddRewardUTXO(txID ids.ID, utxo *avax.UTXO)
 	GetRewardUTXOs(txID ids.ID) ([]*avax.UTXO, error)
-
 	GetTimestamp() time.Time
 	SetTimestamp(time.Time)
-
 	GetCurrentSupply() uint64
 	SetCurrentSupply(uint64)
-
+	GetCurrentStakeSupply() uint64
+	SetCurrentStakeSupply(uint64)
+	GetCurrentRewardSupply() uint64
+	SetCurrentRewardSupply(uint64)
 	GetSubnets() ([]*Tx, error)
 	AddSubnet(createSubnetTx *Tx)
-
 	GetChains(subnetID ids.ID) ([]*Tx, error)
 	AddChain(createChainTx *Tx)
-
 	GetTx(txID ids.ID) (*Tx, Status, error)
 	AddTx(tx *Tx, status Status)
 }
@@ -75,6 +74,10 @@ type versionedStateImpl struct {
 	timestamp time.Time
 
 	currentSupply uint64
+
+	currentStakeSupply uint64
+
+	currentRewardSupply uint64
 
 	addedSubnets  []*Tx
 	cachedSubnets []*Tx
@@ -113,6 +116,8 @@ func newVersionedState(
 		pendingStakerChainState: pending,
 		timestamp:               ps.GetTimestamp(),
 		currentSupply:           ps.GetCurrentSupply(),
+		currentStakeSupply:      ps.GetCurrentStakeSupply(),
+		currentRewardSupply:     ps.GetCurrentRewardSupply(),
 	}
 }
 
@@ -130,6 +135,22 @@ func (vs *versionedStateImpl) GetCurrentSupply() uint64 {
 
 func (vs *versionedStateImpl) SetCurrentSupply(currentSupply uint64) {
 	vs.currentSupply = currentSupply
+}
+
+func (vs *versionedStateImpl) GetCurrentStakeSupply() uint64 {
+	return vs.currentStakeSupply
+}
+
+func (vs *versionedStateImpl) SetCurrentStakeSupply(currentStakeSupply uint64) {
+	vs.currentStakeSupply = currentStakeSupply
+}
+
+func (vs *versionedStateImpl) SetCurrentRewardSupply(currentRewardSupply uint64) {
+	vs.currentRewardSupply = currentRewardSupply
+}
+
+func (vs *versionedStateImpl) GetCurrentRewardSupply() uint64 {
+	return vs.currentRewardSupply
 }
 
 func (vs *versionedStateImpl) GetSubnets() ([]*Tx, error) {
@@ -304,6 +325,8 @@ func (vs *versionedStateImpl) SetBase(parentState MutableState) {
 func (vs *versionedStateImpl) Apply(is InternalState) {
 	is.SetTimestamp(vs.timestamp)
 	is.SetCurrentSupply(vs.currentSupply)
+	is.SetCurrentStakeSupply(vs.currentStakeSupply)
+	is.SetCurrentRewardSupply(vs.currentRewardSupply)
 	for _, subnet := range vs.addedSubnets {
 		is.AddSubnet(subnet)
 	}

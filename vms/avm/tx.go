@@ -25,14 +25,11 @@ type UnsignedTx interface {
 	ID() ids.ID
 	UnsignedBytes() []byte
 	Bytes() []byte
-
 	ConsumedAssetIDs() ids.Set
 	AssetIDs() ids.Set
-
 	NumCredentials() int
 	InputUTXOs() []*avax.UTXOID
 	UTXOs() []*avax.UTXO
-
 	SyntacticVerify(
 		ctx *snow.Context,
 		c codec.Manager,
