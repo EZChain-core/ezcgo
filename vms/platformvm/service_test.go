@@ -594,6 +594,11 @@ func TestGetStake(t *testing.T) {
 	}
 	// Make sure the stake amount is as expected
 	assert.EqualValues(stakeAmt+oldStake, outputs[0].Out.Amount()+outputs[1].Out.Amount()+outputs[2].Out.Amount())
+
+	reponseTotalStake := GetTotalOfStakeReply{}
+	err = service.GetTotalOfStake(nil, nil, &reponseTotalStake)
+	assert.NoError(err)
+	assert.EqualValues(stakeAmt+oldStake, reponseTotalStake.TotalOfStake)
 }
 
 // Test method GetCurrentValidators
@@ -751,3 +756,4 @@ func TestGetTimestamp(t *testing.T) {
 
 	assert.Equal(newTimestamp, reply.Timestamp)
 }
+
