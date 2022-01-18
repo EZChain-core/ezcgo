@@ -2461,3 +2461,16 @@ func (service *Service) GetValidatorsAt(_ *http.Request, args *GetValidatorsAtAr
 	}
 	return nil
 }
+
+// GetTotalStakeReply is the response from GetTotalStake
+type GetTotalOfStakeReply struct {
+	TotalOfStake json.Uint64 `json:"totalStake"`
+}
+
+// GetValidatorsAt returns the weights of the validator set of a provided subnet
+// at the specified height.
+func (service *Service) GetTotalOfStake(_ *http.Request, _ *struct{}, reply *GetTotalOfStakeReply) error {
+	service.vm.ctx.Log.Info("Platform: GetTotalOfStake called")
+	reply.TotalOfStake = json.Uint64(service.vm.internalState.GetCurrentStakeSupply())
+	return nil
+}
