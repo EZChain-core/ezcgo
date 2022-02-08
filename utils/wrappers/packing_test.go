@@ -10,9 +10,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/staking"
+	"github.com/EZChain-core/ezcgo/staking"
 
-	"github.com/ava-labs/avalanchego/utils"
+	"github.com/EZChain-core/ezcgo/utils"
 
 	"github.com/stretchr/testify/assert"
 )

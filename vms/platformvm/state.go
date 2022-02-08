@@ -7,10 +7,10 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/vms/components/avax"
 
-	safemath "github.com/ava-labs/avalanchego/utils/math"
+	safemath "github.com/EZChain-core/ezcgo/utils/math"
 )
 
 // getPaginatedUTXOs returns UTXOs such that at least one of the addresses in

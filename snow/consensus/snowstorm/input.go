@@ -6,11 +6,11 @@ package snowstorm
 import (
 	"math"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/choices"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow"
+	"github.com/EZChain-core/ezcgo/snow/choices"
 
-	sbcon "github.com/ava-labs/avalanchego/snow/consensus/snowball"
+	sbcon "github.com/EZChain-core/ezcgo/snow/consensus/snowball"
 )
 
 var _ Consensus = &Input{}

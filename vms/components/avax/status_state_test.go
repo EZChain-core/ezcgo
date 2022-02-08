@@ -8,10 +8,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
+	"github.com/EZChain-core/ezcgo/database"
+	"github.com/EZChain-core/ezcgo/database/memdb"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/choices"
 )
 
 func TestStatusState(t *testing.T) {

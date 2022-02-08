@@ -8,11 +8,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/formatting"
-	"github.com/ava-labs/avalanchego/utils/sampler"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/formatting"
+	"github.com/EZChain-core/ezcgo/utils/sampler"
 
-	safemath "github.com/ava-labs/avalanchego/utils/math"
+	safemath "github.com/EZChain-core/ezcgo/utils/math"
 )
 
 const (

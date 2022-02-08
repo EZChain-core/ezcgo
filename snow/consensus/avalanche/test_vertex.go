@@ -4,8 +4,8 @@
 package avalanche
 
 import (
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowstorm"
+	"github.com/EZChain-core/ezcgo/snow/choices"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowstorm"
 )
 
 var _ Vertex = &TestVertex{}

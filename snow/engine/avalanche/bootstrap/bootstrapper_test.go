@@ -11,17 +11,17 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/consensus/avalanche"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowstorm"
-	"github.com/ava-labs/avalanchego/snow/engine/avalanche/vertex"
-	"github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/snow/engine/common/queue"
-	"github.com/ava-labs/avalanchego/snow/validators"
+	"github.com/EZChain-core/ezcgo/database/memdb"
+	"github.com/EZChain-core/ezcgo/database/prefixdb"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow"
+	"github.com/EZChain-core/ezcgo/snow/choices"
+	"github.com/EZChain-core/ezcgo/snow/consensus/avalanche"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowstorm"
+	"github.com/EZChain-core/ezcgo/snow/engine/avalanche/vertex"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/snow/engine/common/queue"
+	"github.com/EZChain-core/ezcgo/snow/validators"
 )
 
 var (

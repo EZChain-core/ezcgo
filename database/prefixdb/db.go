@@ -6,9 +6,9 @@ package prefixdb
 import (
 	"sync"
 
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/nodb"
-	"github.com/ava-labs/avalanchego/utils/hashing"
+	"github.com/EZChain-core/ezcgo/database"
+	"github.com/EZChain-core/ezcgo/database/nodb"
+	"github.com/EZChain-core/ezcgo/utils/hashing"
 )
 
 const (

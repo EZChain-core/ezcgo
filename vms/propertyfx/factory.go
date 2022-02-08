@@ -4,8 +4,8 @@
 package propertyfx
 
 import (
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow"
 )
 
 // ID that this Fx uses when labeled

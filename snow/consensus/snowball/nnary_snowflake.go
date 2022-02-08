@@ -6,7 +6,7 @@ package snowball
 import (
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/EZChain-core/ezcgo/ids"
 )
 
 // nnarySnowflake is the implementation of a snowflake instance with an

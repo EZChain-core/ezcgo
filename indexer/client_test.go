@@ -6,8 +6,8 @@ package indexer
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/formatting"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/formatting"
 	"github.com/stretchr/testify/assert"
 )
 

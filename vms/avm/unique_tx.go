@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/cache"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowstorm"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/EZChain-core/ezcgo/cache"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/choices"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowstorm"
+	"github.com/EZChain-core/ezcgo/vms/components/avax"
 )
 
 var (

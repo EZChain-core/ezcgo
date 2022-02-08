@@ -6,12 +6,12 @@ package platformvm
 import (
 	"time"
 
-	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/formatting"
-	cjson "github.com/ava-labs/avalanchego/utils/json"
-	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/EZChain-core/ezcgo/api"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/constants"
+	"github.com/EZChain-core/ezcgo/utils/formatting"
+	cjson "github.com/EZChain-core/ezcgo/utils/json"
+	"github.com/EZChain-core/ezcgo/utils/rpc"
 )
 
 // Interface compliance

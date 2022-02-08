@@ -6,9 +6,9 @@ package tree
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/choices"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowman"
 	"github.com/stretchr/testify/assert"
 )
 

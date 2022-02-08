@@ -6,7 +6,7 @@ package platformvm
 import (
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/EZChain-core/ezcgo/ids"
 )
 
 var _ TxHeap = &txHeapWithMetrics{}

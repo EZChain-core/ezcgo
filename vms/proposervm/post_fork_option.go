@@ -6,9 +6,9 @@ package proposervm
 import (
 	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/vms/proposervm/block"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/choices"
+	"github.com/EZChain-core/ezcgo/vms/proposervm/block"
 )
 
 var _ Block = &postForkOption{}

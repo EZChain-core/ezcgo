@@ -12,18 +12,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/ava-labs/avalanchego/database/manager"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/hashing"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/version"
-	"github.com/ava-labs/avalanchego/vms/proposervm/proposer"
+	"github.com/EZChain-core/ezcgo/database/manager"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow"
+	"github.com/EZChain-core/ezcgo/snow/choices"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowman"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/snow/engine/snowman/block"
+	"github.com/EZChain-core/ezcgo/snow/validators"
+	"github.com/EZChain-core/ezcgo/utils/hashing"
+	"github.com/EZChain-core/ezcgo/utils/timer/mockable"
+	"github.com/EZChain-core/ezcgo/version"
+	"github.com/EZChain-core/ezcgo/vms/proposervm/proposer"
 )
 
 func TestCoreVMNotRemote(t *testing.T) {

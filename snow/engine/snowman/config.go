@@ -4,9 +4,9 @@
 package snowman
 
 import (
-	"github.com/ava-labs/avalanchego/snow/consensus/snowball"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/bootstrap"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowball"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowman"
+	"github.com/EZChain-core/ezcgo/snow/engine/snowman/bootstrap"
 )
 
 // Config wraps all the parameters needed for a snowman engine

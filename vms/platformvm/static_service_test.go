@@ -6,10 +6,10 @@ package platformvm
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/formatting"
-	"github.com/ava-labs/avalanchego/utils/json"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/constants"
+	"github.com/EZChain-core/ezcgo/utils/formatting"
+	"github.com/EZChain-core/ezcgo/utils/json"
 )
 
 func TestBuildGenesisInvalidUTXOBalance(t *testing.T) {

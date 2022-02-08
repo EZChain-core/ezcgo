@@ -6,9 +6,9 @@ package keystore
 import (
 	"time"
 
-	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/utils/formatting"
-	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/EZChain-core/ezcgo/api"
+	"github.com/EZChain-core/ezcgo/utils/formatting"
+	"github.com/EZChain-core/ezcgo/utils/rpc"
 )
 
 // Interface compliance

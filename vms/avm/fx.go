@@ -4,13 +4,13 @@
 package avm
 
 import (
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/components/verify"
-	"github.com/ava-labs/avalanchego/vms/nftfx"
-	"github.com/ava-labs/avalanchego/vms/propertyfx"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow"
+	"github.com/EZChain-core/ezcgo/vms/components/avax"
+	"github.com/EZChain-core/ezcgo/vms/components/verify"
+	"github.com/EZChain-core/ezcgo/vms/nftfx"
+	"github.com/EZChain-core/ezcgo/vms/propertyfx"
+	"github.com/EZChain-core/ezcgo/vms/secp256k1fx"
 )
 
 var (

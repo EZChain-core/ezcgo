@@ -4,14 +4,14 @@
 package genesis
 
 import (
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/vms/avm"
-	"github.com/ava-labs/avalanchego/vms/evm"
-	"github.com/ava-labs/avalanchego/vms/nftfx"
-	"github.com/ava-labs/avalanchego/vms/platformvm"
-	"github.com/ava-labs/avalanchego/vms/propertyfx"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/constants"
+	"github.com/EZChain-core/ezcgo/vms/avm"
+	"github.com/EZChain-core/ezcgo/vms/evm"
+	"github.com/EZChain-core/ezcgo/vms/nftfx"
+	"github.com/EZChain-core/ezcgo/vms/platformvm"
+	"github.com/EZChain-core/ezcgo/vms/propertyfx"
+	"github.com/EZChain-core/ezcgo/vms/secp256k1fx"
 )
 
 // Aliases returns the default aliases based on the network ID

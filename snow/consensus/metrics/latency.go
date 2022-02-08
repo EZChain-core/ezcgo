@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/linkedhashmap"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/metric"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/linkedhashmap"
+	"github.com/EZChain-core/ezcgo/utils/logging"
+	"github.com/EZChain-core/ezcgo/utils/metric"
+	"github.com/EZChain-core/ezcgo/utils/timer/mockable"
+	"github.com/EZChain-core/ezcgo/utils/wrappers"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

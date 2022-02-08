@@ -10,9 +10,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/utils/timer"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowman"
+	"github.com/EZChain-core/ezcgo/utils/timer"
+	"github.com/EZChain-core/ezcgo/utils/timer/mockable"
 )
 
 const (

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils/units"
+	"github.com/EZChain-core/ezcgo/utils/units"
 )
 
 func isPowerTwo(num int) bool {

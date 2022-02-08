@@ -6,7 +6,7 @@ package avax
 import (
 	"errors"
 
-	"github.com/ava-labs/avalanchego/vms/components/verify"
+	"github.com/EZChain-core/ezcgo/vms/components/verify"
 )
 
 var (

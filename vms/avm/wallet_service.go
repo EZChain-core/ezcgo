@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/EZChain-core/ezcgo/api"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/vms/components/avax"
+	"github.com/EZChain-core/ezcgo/vms/secp256k1fx"
 
-	"github.com/ava-labs/avalanchego/utils/formatting"
-	safemath "github.com/ava-labs/avalanchego/utils/math"
+	"github.com/EZChain-core/ezcgo/utils/formatting"
+	safemath "github.com/EZChain-core/ezcgo/utils/math"
 )
 
 type WalletService struct {

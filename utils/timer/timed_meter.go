@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
+	"github.com/EZChain-core/ezcgo/utils/timer/mockable"
 )
 
 var _ Meter = &TimedMeter{}

@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ava-labs/avalanchego/app/runner"
-	"github.com/ava-labs/avalanchego/config"
-	"github.com/ava-labs/avalanchego/version"
+	"github.com/EZChain-core/ezcgo/app/runner"
+	"github.com/EZChain-core/ezcgo/config"
+	"github.com/EZChain-core/ezcgo/version"
 )
 
 func main() {

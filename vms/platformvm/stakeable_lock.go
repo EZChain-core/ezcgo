@@ -6,7 +6,7 @@ package platformvm
 import (
 	"errors"
 
-	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/EZChain-core/ezcgo/vms/components/avax"
 )
 
 var (

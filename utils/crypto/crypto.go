@@ -4,7 +4,7 @@
 package crypto
 
 import (
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/EZChain-core/ezcgo/ids"
 )
 
 type Factory interface {

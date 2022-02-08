@@ -6,9 +6,9 @@ package network
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/validators"
+	"github.com/EZChain-core/ezcgo/utils/constants"
 	"github.com/stretchr/testify/assert"
 )
 

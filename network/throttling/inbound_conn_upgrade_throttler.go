@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
+	"github.com/EZChain-core/ezcgo/utils"
+	"github.com/EZChain-core/ezcgo/utils/logging"
+	"github.com/EZChain-core/ezcgo/utils/timer/mockable"
 )
 
 var (

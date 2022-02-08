@@ -9,8 +9,8 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/units"
+	"github.com/EZChain-core/ezcgo/utils/constants"
+	"github.com/EZChain-core/ezcgo/utils/units"
 )
 
 // DefaultLogDirectory is the default directory where logs are saved

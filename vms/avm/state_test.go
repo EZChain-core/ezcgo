@@ -7,13 +7,13 @@ import (
 	"math"
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/choices"
-	"github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/utils/crypto"
-	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/vms/components/avax"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/choices"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/utils/crypto"
+	"github.com/EZChain-core/ezcgo/utils/units"
+	"github.com/EZChain-core/ezcgo/vms/components/avax"
+	"github.com/EZChain-core/ezcgo/vms/secp256k1fx"
 )
 
 func TestSetsAndGets(t *testing.T) {

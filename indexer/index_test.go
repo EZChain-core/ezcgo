@@ -6,15 +6,15 @@ package indexer
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/codec/linearcodec"
-	"github.com/ava-labs/avalanchego/database/memdb"
-	"github.com/ava-labs/avalanchego/database/versiondb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow"
-	"github.com/ava-labs/avalanchego/utils"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/timer/mockable"
+	"github.com/EZChain-core/ezcgo/codec"
+	"github.com/EZChain-core/ezcgo/codec/linearcodec"
+	"github.com/EZChain-core/ezcgo/database/memdb"
+	"github.com/EZChain-core/ezcgo/database/versiondb"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow"
+	"github.com/EZChain-core/ezcgo/utils"
+	"github.com/EZChain-core/ezcgo/utils/logging"
+	"github.com/EZChain-core/ezcgo/utils/timer/mockable"
 	"github.com/stretchr/testify/assert"
 )
 

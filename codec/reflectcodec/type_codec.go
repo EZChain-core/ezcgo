@@ -9,8 +9,8 @@ import (
 	"math"
 	"reflect"
 
-	"github.com/ava-labs/avalanchego/codec"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/EZChain-core/ezcgo/codec"
+	"github.com/EZChain-core/ezcgo/utils/wrappers"
 )
 
 const (

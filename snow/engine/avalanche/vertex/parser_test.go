@@ -6,7 +6,7 @@ package vertex
 import (
 	"testing"
 
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/EZChain-core/ezcgo/ids"
 	"github.com/stretchr/testify/assert"
 )
 

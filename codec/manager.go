@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/EZChain-core/ezcgo/utils/units"
+	"github.com/EZChain-core/ezcgo/utils/wrappers"
 )
 
 const (

@@ -10,9 +10,9 @@ import (
 
 	healthback "github.com/AppsFlyer/go-sundheit"
 
-	"github.com/ava-labs/avalanchego/utils/logging"
+	"github.com/EZChain-core/ezcgo/utils/logging"
 
-	healthlib "github.com/ava-labs/avalanchego/health"
+	healthlib "github.com/EZChain-core/ezcgo/health"
 )
 
 type Service struct {

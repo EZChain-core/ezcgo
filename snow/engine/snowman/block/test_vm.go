@@ -6,9 +6,9 @@ package block
 import (
 	"errors"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
-	"github.com/ava-labs/avalanchego/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowman"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
 )
 
 var (

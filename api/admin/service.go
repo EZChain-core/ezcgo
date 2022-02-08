@@ -9,17 +9,17 @@ import (
 
 	"github.com/gorilla/rpc/v2"
 
-	"github.com/ava-labs/avalanchego/api"
-	"github.com/ava-labs/avalanchego/api/server"
-	"github.com/ava-labs/avalanchego/chains"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/utils/constants"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/perms"
-	"github.com/ava-labs/avalanchego/utils/profiler"
+	"github.com/EZChain-core/ezcgo/api"
+	"github.com/EZChain-core/ezcgo/api/server"
+	"github.com/EZChain-core/ezcgo/chains"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/utils/constants"
+	"github.com/EZChain-core/ezcgo/utils/logging"
+	"github.com/EZChain-core/ezcgo/utils/perms"
+	"github.com/EZChain-core/ezcgo/utils/profiler"
 
-	cjson "github.com/ava-labs/avalanchego/utils/json"
+	cjson "github.com/EZChain-core/ezcgo/utils/json"
 )
 
 const (

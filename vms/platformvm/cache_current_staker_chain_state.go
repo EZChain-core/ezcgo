@@ -10,12 +10,12 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/validators"
-	"github.com/ava-labs/avalanchego/utils/constants"
+	"github.com/EZChain-core/ezcgo/database"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/validators"
+	"github.com/EZChain-core/ezcgo/utils/constants"
 
-	safemath "github.com/ava-labs/avalanchego/utils/math"
+	safemath "github.com/EZChain-core/ezcgo/utils/math"
 )
 
 var (

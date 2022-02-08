@@ -4,7 +4,7 @@
 package snow
 
 import (
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/EZChain-core/ezcgo/ids"
 )
 
 // Acceptor is implemented when a struct is monitoring if a message is accepted

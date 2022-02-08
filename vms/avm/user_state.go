@@ -6,10 +6,10 @@ package avm
 import (
 	"fmt"
 
-	"github.com/ava-labs/avalanchego/database/encdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/crypto"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/EZChain-core/ezcgo/database/encdb"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/crypto"
+	"github.com/EZChain-core/ezcgo/vms/secp256k1fx"
 )
 
 var addresses = ids.Empty

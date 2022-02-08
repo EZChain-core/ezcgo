@@ -7,11 +7,11 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/ava-labs/avalanchego/vms/types"
+	"github.com/EZChain-core/ezcgo/vms/types"
 
-	"github.com/ava-labs/avalanchego/utils/units"
-	"github.com/ava-labs/avalanchego/vms/components/verify"
-	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/EZChain-core/ezcgo/utils/units"
+	"github.com/EZChain-core/ezcgo/vms/components/verify"
+	"github.com/EZChain-core/ezcgo/vms/secp256k1fx"
 )
 
 const (

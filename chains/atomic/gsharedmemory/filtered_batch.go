@@ -4,7 +4,7 @@
 package gsharedmemory
 
 import (
-	"github.com/ava-labs/avalanchego/chains/atomic/gsharedmemory/gsharedmemoryproto"
+	"github.com/EZChain-core/ezcgo/chains/atomic/gsharedmemory/gsharedmemoryproto"
 )
 
 type filteredBatch struct {

@@ -11,16 +11,16 @@ import (
 
 	"github.com/gorilla/rpc/v2"
 
-	"github.com/ava-labs/avalanchego/chains/atomic"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/encdb"
-	"github.com/ava-labs/avalanchego/database/manager"
-	"github.com/ava-labs/avalanchego/database/prefixdb"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/utils/password"
+	"github.com/EZChain-core/ezcgo/chains/atomic"
+	"github.com/EZChain-core/ezcgo/database"
+	"github.com/EZChain-core/ezcgo/database/encdb"
+	"github.com/EZChain-core/ezcgo/database/manager"
+	"github.com/EZChain-core/ezcgo/database/prefixdb"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/utils/logging"
+	"github.com/EZChain-core/ezcgo/utils/password"
 
-	jsoncodec "github.com/ava-labs/avalanchego/utils/json"
+	jsoncodec "github.com/EZChain-core/ezcgo/utils/json"
 )
 
 const (

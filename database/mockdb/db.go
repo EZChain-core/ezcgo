@@ -6,7 +6,7 @@ package mockdb
 import (
 	"errors"
 
-	"github.com/ava-labs/avalanchego/database"
+	"github.com/EZChain-core/ezcgo/database"
 )
 
 var (

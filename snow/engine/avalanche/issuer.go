@@ -4,9 +4,9 @@
 package avalanche
 
 import (
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/consensus/avalanche"
-	"github.com/ava-labs/avalanchego/snow/consensus/snowstorm"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/consensus/avalanche"
+	"github.com/EZChain-core/ezcgo/snow/consensus/snowstorm"
 )
 
 // issuer issues [vtx] into consensus after its dependencies are met.

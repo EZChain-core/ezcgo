@@ -6,9 +6,9 @@ package health
 import (
 	healthback "github.com/AppsFlyer/go-sundheit"
 
-	"github.com/ava-labs/avalanchego/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
 
-	healthlib "github.com/ava-labs/avalanchego/health"
+	healthlib "github.com/EZChain-core/ezcgo/health"
 )
 
 var _ Health = &noOp{}

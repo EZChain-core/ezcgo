@@ -8,9 +8,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/ava-labs/avalanchego/message"
-	"github.com/ava-labs/avalanchego/utils/metric"
-	"github.com/ava-labs/avalanchego/utils/wrappers"
+	"github.com/EZChain-core/ezcgo/message"
+	"github.com/EZChain-core/ezcgo/utils/metric"
+	"github.com/EZChain-core/ezcgo/utils/wrappers"
 )
 
 type handlerMetrics struct {

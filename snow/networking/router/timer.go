@@ -6,7 +6,7 @@ package router
 import (
 	"time"
 
-	"github.com/ava-labs/avalanchego/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
 )
 
 var _ common.Timer = &Timer{}

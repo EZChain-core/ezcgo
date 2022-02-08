@@ -10,8 +10,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils/wrappers"
-	"github.com/ava-labs/avalanchego/vms/rpcchainvm/ghttp/gconn/gconnproto"
+	"github.com/EZChain-core/ezcgo/utils/wrappers"
+	"github.com/EZChain-core/ezcgo/vms/rpcchainvm/ghttp/gconn/gconnproto"
 )
 
 var _ net.Conn = &Client{}

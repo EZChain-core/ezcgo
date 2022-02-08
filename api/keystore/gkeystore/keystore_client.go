@@ -8,12 +8,12 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 
-	"github.com/ava-labs/avalanchego/api/keystore"
-	"github.com/ava-labs/avalanchego/api/keystore/gkeystore/gkeystoreproto"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/encdb"
-	"github.com/ava-labs/avalanchego/database/rpcdb"
-	"github.com/ava-labs/avalanchego/database/rpcdb/rpcdbproto"
+	"github.com/EZChain-core/ezcgo/api/keystore"
+	"github.com/EZChain-core/ezcgo/api/keystore/gkeystore/gkeystoreproto"
+	"github.com/EZChain-core/ezcgo/database"
+	"github.com/EZChain-core/ezcgo/database/encdb"
+	"github.com/EZChain-core/ezcgo/database/rpcdb"
+	"github.com/EZChain-core/ezcgo/database/rpcdb/rpcdbproto"
 )
 
 var _ keystore.BlockchainKeystore = &Client{}

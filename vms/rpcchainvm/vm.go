@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 
-	"github.com/ava-labs/avalanchego/snow/engine/snowman/block"
-	"github.com/ava-labs/avalanchego/vms/rpcchainvm/vmproto"
+	"github.com/EZChain-core/ezcgo/snow/engine/snowman/block"
+	"github.com/EZChain-core/ezcgo/vms/rpcchainvm/vmproto"
 )
 
 // Handshake is a common handshake that is shared by plugin and host.

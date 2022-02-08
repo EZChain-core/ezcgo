@@ -8,8 +8,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/ava-labs/avalanchego/vms/rpcchainvm/ghttp/gconn/gconnproto"
-	"github.com/ava-labs/avalanchego/vms/rpcchainvm/grpcutils"
+	"github.com/EZChain-core/ezcgo/vms/rpcchainvm/ghttp/gconn/gconnproto"
+	"github.com/EZChain-core/ezcgo/vms/rpcchainvm/grpcutils"
 )
 
 var _ gconnproto.ConnServer = &Server{}

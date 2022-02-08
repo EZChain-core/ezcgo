@@ -10,12 +10,12 @@ import (
 
 	"github.com/hashicorp/go-plugin"
 
-	"github.com/ava-labs/avalanchego/api/keystore"
-	"github.com/ava-labs/avalanchego/api/keystore/gkeystore/gkeystoreproto"
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/database/rpcdb"
-	"github.com/ava-labs/avalanchego/database/rpcdb/rpcdbproto"
-	"github.com/ava-labs/avalanchego/vms/rpcchainvm/grpcutils"
+	"github.com/EZChain-core/ezcgo/api/keystore"
+	"github.com/EZChain-core/ezcgo/api/keystore/gkeystore/gkeystoreproto"
+	"github.com/EZChain-core/ezcgo/database"
+	"github.com/EZChain-core/ezcgo/database/rpcdb"
+	"github.com/EZChain-core/ezcgo/database/rpcdb/rpcdbproto"
+	"github.com/EZChain-core/ezcgo/vms/rpcchainvm/grpcutils"
 )
 
 var _ gkeystoreproto.KeystoreServer = &Server{}

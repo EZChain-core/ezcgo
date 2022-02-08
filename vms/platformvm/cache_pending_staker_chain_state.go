@@ -9,8 +9,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ava-labs/avalanchego/database"
-	"github.com/ava-labs/avalanchego/ids"
+	"github.com/EZChain-core/ezcgo/database"
+	"github.com/EZChain-core/ezcgo/ids"
 )
 
 var _ pendingStakerChainState = &pendingStakerChainStateImpl{}

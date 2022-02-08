@@ -1,4 +1,4 @@
-module github.com/ava-labs/avalanchego
+module github.com/EZChain-core/ezcgo
 
 // Changes to the minimum golang version must also be replicated in
 // scripts/ansible/roles/golang_base/defaults/main.yml

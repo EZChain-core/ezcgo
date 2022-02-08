@@ -6,7 +6,7 @@ package corruptabledb
 import (
 	"sync/atomic"
 
-	"github.com/ava-labs/avalanchego/database"
+	"github.com/EZChain-core/ezcgo/database"
 )
 
 var (

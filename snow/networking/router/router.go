@@ -6,13 +6,13 @@ package router
 import (
 	"time"
 
-	"github.com/ava-labs/avalanchego/health"
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/message"
-	"github.com/ava-labs/avalanchego/snow/networking/benchlist"
-	"github.com/ava-labs/avalanchego/snow/networking/timeout"
-	"github.com/ava-labs/avalanchego/utils/logging"
-	"github.com/ava-labs/avalanchego/version"
+	"github.com/EZChain-core/ezcgo/health"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/message"
+	"github.com/EZChain-core/ezcgo/snow/networking/benchlist"
+	"github.com/EZChain-core/ezcgo/snow/networking/timeout"
+	"github.com/EZChain-core/ezcgo/utils/logging"
+	"github.com/EZChain-core/ezcgo/version"
 	"github.com/prometheus/client_golang/prometheus"
 )
 

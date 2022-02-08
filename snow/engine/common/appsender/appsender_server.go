@@ -6,9 +6,9 @@ package appsender
 import (
 	"context"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/snow/engine/common"
-	"github.com/ava-labs/avalanchego/snow/engine/common/appsender/appsenderproto"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/snow/engine/common"
+	"github.com/EZChain-core/ezcgo/snow/engine/common/appsender/appsenderproto"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

@@ -7,7 +7,7 @@ import (
 	"context"
 	"io"
 
-	"github.com/ava-labs/avalanchego/vms/rpcchainvm/ghttp/greadcloser/greadcloserproto"
+	"github.com/EZChain-core/ezcgo/vms/rpcchainvm/ghttp/greadcloser/greadcloserproto"
 )
 
 var _ greadcloserproto.ReaderServer = &Server{}

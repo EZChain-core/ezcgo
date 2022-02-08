@@ -7,7 +7,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/EZChain-core/ezcgo/utils/rpc"
 )
 
 var errInvalidNumberOfChecks = errors.New("expected at least 1 check attempt")

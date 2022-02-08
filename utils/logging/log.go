@@ -14,7 +14,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ava-labs/avalanchego/utils/perms"
+	"github.com/EZChain-core/ezcgo/utils/perms"
 )
 
 var (

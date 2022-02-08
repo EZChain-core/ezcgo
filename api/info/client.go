@@ -6,9 +6,9 @@ package info
 import (
 	"time"
 
-	"github.com/ava-labs/avalanchego/ids"
-	"github.com/ava-labs/avalanchego/network"
-	"github.com/ava-labs/avalanchego/utils/rpc"
+	"github.com/EZChain-core/ezcgo/ids"
+	"github.com/EZChain-core/ezcgo/network"
+	"github.com/EZChain-core/ezcgo/utils/rpc"
 )
 
 // Interface compliance
