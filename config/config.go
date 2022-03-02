@@ -33,6 +33,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/consensus/snowball"
 	"github.com/ava-labs/avalanchego/snow/networking/benchlist"
 	"github.com/ava-labs/avalanchego/snow/networking/router"
+	"github.com/ava-labs/avalanchego/snow/networking/sender"
 	"github.com/ava-labs/avalanchego/staking"
 	"github.com/ava-labs/avalanchego/utils"
 	"github.com/ava-labs/avalanchego/utils/constants"
@@ -59,12 +60,14 @@ var (
 	}
 
 	errInvalidStakerWeights          = errors.New("staking weights must be positive")
+	errStakingDisableOnPublicNetwork = errors.New("staking disabled on public network")
 	errAuthPasswordTooWeak           = errors.New("API auth password is not strong enough")
 	errInvalidUptimeRequirement      = errors.New("uptime requirement must be in the range [0, 1]")
 	errMinValidatorStakeAboveMax     = errors.New("minimum validator stake can't be greater than maximum validator stake")
 	errInvalidDelegationFee          = errors.New("delegation fee must be in the range [0, 1,000,000]")
 	errInvalidMinStakeDuration       = errors.New("min stake duration must be > 0")
 	errMinStakeDurationAboveMax      = errors.New("max stake duration can't be less than min stake duration")
+	errStakeMaxConsumptionBelowMin   = errors.New("stake max consumption can't be less than min stake consumption")
 	errStakeMintingPeriodBelowMin    = errors.New("stake minting period can't be less than max stake duration")
 	errCannotWhitelistPrimaryNetwork = errors.New("cannot whitelist primary network")
 	errStakingKeyContentUnset        = fmt.Errorf("%s key not set but %s set", StakingKeyContentKey, StakingCertContentKey)
@@ -223,8 +226,8 @@ func getHTTPConfig(v *viper.Viper) (node.HTTPConfig, error) {
 			return node.HTTPConfig{}, fmt.Errorf("unable to decode base64 content: %w", err)
 		}
 	case v.IsSet(HTTPSCertFileKey):
-		httpsKeyFilepath := os.ExpandEnv(v.GetString(HTTPSCertFileKey))
-		if httpsCert, err = ioutil.ReadFile(filepath.Clean(httpsKeyFilepath)); err != nil {
+		httpsCertFilepath := os.ExpandEnv(v.GetString(HTTPSCertFileKey))
+		if httpsCert, err = ioutil.ReadFile(filepath.Clean(httpsCertFilepath)); err != nil {
 			return node.HTTPConfig{}, err
 		}
 	}
@@ -367,23 +370,17 @@ func getNetworkConfig(v *viper.Viper, halflife time.Duration) (network.Config, e
 			PeerListStakerGossipFraction: v.GetUint32(NetworkPeerListStakerGossipFractionKey),
 		},
 
-		GossipConfig: network.GossipConfig{
-			GossipAcceptedFrontierSize: uint(v.GetUint32(ConsensusGossipAcceptedFrontierSizeKey)),
-			GossipOnAcceptSize:         uint(v.GetUint32(ConsensusGossipOnAcceptSizeKey)),
-			AppGossipNonValidatorSize:  uint(v.GetUint32(AppGossipNonValidatorSizeKey)),
-			AppGossipValidatorSize:     uint(v.GetUint32(AppGossipValidatorSizeKey)),
-		},
-
 		DelayConfig: network.DelayConfig{
 			MaxReconnectDelay:     v.GetDuration(NetworkMaxReconnectDelayKey),
 			InitialReconnectDelay: v.GetDuration(NetworkInitialReconnectDelayKey),
 		},
 
-		MaxClockDifference: v.GetDuration(NetworkMaxClockDifferenceKey),
-		CompressionEnabled: v.GetBool(NetworkCompressionEnabledKey),
-		PingFrequency:      v.GetDuration(NetworkPingFrequencyKey),
-		AllowPrivateIPs:    v.GetBool(NetworkAllowPrivateIPsKey),
-		UptimeMetricFreq:   v.GetDuration(UptimeMetricFreqKey),
+		MaxClockDifference:           v.GetDuration(NetworkMaxClockDifferenceKey),
+		CompressionEnabled:           v.GetBool(NetworkCompressionEnabledKey),
+		PingFrequency:                v.GetDuration(NetworkPingFrequencyKey),
+		AllowPrivateIPs:              v.GetBool(NetworkAllowPrivateIPsKey),
+		UptimeMetricFreq:             v.GetDuration(UptimeMetricFreqKey),
+		MaximumInboundMessageTimeout: v.GetDuration(NetworkMaximumInboundTimeoutKey),
 
 		RequireValidatorToConnect: v.GetBool(NetworkRequireValidatorToConnectKey),
 	}
@@ -447,12 +444,12 @@ func getBenchlistConfig(v *viper.Viper, alpha, k int) (benchlist.Config, error) 
 
 func getBootstrapConfig(v *viper.Viper, networkID uint32) (node.BootstrapConfig, error) {
 	config := node.BootstrapConfig{
-		RetryBootstrap:                         v.GetBool(RetryBootstrapKey),
-		RetryBootstrapWarnFrequency:            v.GetInt(RetryBootstrapWarnFrequencyKey),
-		BootstrapBeaconConnectionTimeout:       v.GetDuration(BootstrapBeaconConnectionTimeoutKey),
-		BootstrapMaxTimeGetAncestors:           v.GetDuration(BootstrapMaxTimeGetAncestorsKey),
-		BootstrapMultiputMaxContainersSent:     int(v.GetUint(BootstrapMultiputMaxContainersSentKey)),
-		BootstrapMultiputMaxContainersReceived: int(v.GetUint(BootstrapMultiputMaxContainersReceivedKey)),
+		RetryBootstrap:                          v.GetBool(RetryBootstrapKey),
+		RetryBootstrapWarnFrequency:             v.GetInt(RetryBootstrapWarnFrequencyKey),
+		BootstrapBeaconConnectionTimeout:        v.GetDuration(BootstrapBeaconConnectionTimeoutKey),
+		BootstrapMaxTimeGetAncestors:            v.GetDuration(BootstrapMaxTimeGetAncestorsKey),
+		BootstrapAncestorsMaxContainersSent:     int(v.GetUint(BootstrapAncestorsMaxContainersSentKey)),
+		BootstrapAncestorsMaxContainersReceived: int(v.GetUint(BootstrapAncestorsMaxContainersReceivedKey)),
 	}
 
 	bootstrapIPs, bootstrapIDs := genesis.SampleBeacons(networkID, 5)
@@ -506,7 +503,7 @@ func getIPConfig(v *viper.Viper) (node.IPConfig, error) {
 		config.Nat = nat.NewNoRouter()
 		ip, err = dynamicip.FetchExternalIP(config.DynamicPublicIPResolver)
 		if err != nil {
-			return node.IPConfig{}, fmt.Errorf("dynamic ip address fetch failed: %s", err)
+			return node.IPConfig{}, fmt.Errorf("dynamic ip address fetch failed: %w", err)
 		}
 	case publicIP == "":
 		// User didn't specify a public IP to use; try with NAT traversal
@@ -624,6 +621,10 @@ func getStakingConfig(v *viper.Viper, networkID uint32) (node.StakingConfig, err
 		return node.StakingConfig{}, errInvalidStakerWeights
 	}
 
+	if !config.EnableStaking && (networkID == constants.MainnetID || networkID == constants.FujiID) {
+		return node.StakingConfig{}, errStakingDisableOnPublicNetwork
+	}
+
 	var err error
 	config.StakingTLSCert, err = getStakingTLSCert(v)
 	if err != nil {
@@ -636,7 +637,10 @@ func getStakingConfig(v *viper.Viper, networkID uint32) (node.StakingConfig, err
 		config.MinDelegatorStake = v.GetUint64(MinDelegatorStakeKey)
 		config.MinStakeDuration = v.GetDuration(MinStakeDurationKey)
 		config.MaxStakeDuration = v.GetDuration(MaxStakeDurationKey)
-		config.StakeMintingPeriod = v.GetDuration(StakeMintingPeriodKey)
+		config.RewardConfig.MaxConsumptionRate = v.GetUint64(StakeMaxConsumptionRateKey)
+		config.RewardConfig.MinConsumptionRate = v.GetUint64(StakeMinConsumptionRateKey)
+		config.RewardConfig.MintingPeriod = v.GetDuration(StakeMintingPeriodKey)
+		config.RewardConfig.SupplyCap = v.GetUint64(StakeSupplyCapKey)
 		config.MinDelegationFee = v.GetUint32(MinDelegatorFeeKey)
 		switch {
 		case config.UptimeRequirement < 0 || config.UptimeRequirement > 1:
@@ -649,7 +653,9 @@ func getStakingConfig(v *viper.Viper, networkID uint32) (node.StakingConfig, err
 			return node.StakingConfig{}, errInvalidMinStakeDuration
 		case config.MaxStakeDuration < config.MinStakeDuration:
 			return node.StakingConfig{}, errMinStakeDurationAboveMax
-		case config.StakeMintingPeriod < config.MaxStakeDuration:
+		case config.RewardConfig.MaxConsumptionRate < config.RewardConfig.MinConsumptionRate:
+			return node.StakingConfig{}, errStakeMaxConsumptionBelowMin
+		case config.RewardConfig.MintingPeriod < config.MaxStakeDuration:
 			return node.StakingConfig{}, errStakeMintingPeriodBelowMin
 		}
 	} else {
@@ -1074,6 +1080,13 @@ func GetNodeConfig(v *viper.Viper, buildDir string) (node.Config, error) {
 		return node.Config{}, err
 	}
 
+	nodeConfig.GossipConfig = sender.GossipConfig{
+		AcceptedFrontierSize:      uint(v.GetUint32(ConsensusGossipAcceptedFrontierSizeKey)),
+		OnAcceptSize:              uint(v.GetUint32(ConsensusGossipOnAcceptSizeKey)),
+		AppGossipNonValidatorSize: uint(v.GetUint32(AppGossipNonValidatorSizeKey)),
+		AppGossipValidatorSize:    uint(v.GetUint32(AppGossipValidatorSizeKey)),
+	}
+
 	// Benchlist
 	nodeConfig.BenchlistConfig, err = getBenchlistConfig(v, nodeConfig.ConsensusParams.Alpha, nodeConfig.ConsensusParams.K)
 	if err != nil {
@@ -1132,5 +1145,9 @@ func GetNodeConfig(v *viper.Viper, buildDir string) (node.Config, error) {
 	if err != nil {
 		return node.Config{}, err
 	}
+
+	// reset proposerVM height index
+	nodeConfig.ResetProposerVMHeightIndex = v.GetBool(ResetProposerVMHeightIndexKey)
+
 	return nodeConfig, nil
 }

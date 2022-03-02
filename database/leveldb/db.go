@@ -32,7 +32,7 @@ const (
 	WriteBufferSize = 12 * opt.MiB
 
 	// HandleCap is the number of files descriptors to cap levelDB to use.
-	HandleCap = 64
+	HandleCap = 1024
 
 	// BitsPerKey is the number of bits to add to the bloom filter per key.
 	BitsPerKey = 10
@@ -53,49 +53,83 @@ var (
 // in binary-alphabetical order.
 type Database struct {
 	*leveldb.DB
+	closed utils.AtomicBool
 }
 
 type config struct {
-	// BlockSize is the minimum uncompressed size in bytes of each 'sorted
-	// table' block.
+	// BlockCacheCapacity defines the capacity of the 'sorted table' block caching.
+	// Use -1 for zero, this has same effect as specifying NoCacher to BlockCacher.
+	//
+	// The default value is 12MiB.
 	BlockCacheCapacity int `json:"blockCacheCapacity"`
-	// BlockSize is the minimum uncompressed size in bytes of each 'sorted
-	// table' block.
+	// BlockSize is the minimum uncompressed size in bytes of each 'sorted table'
+	// block.
+	//
+	// The default value is 4KiB.
 	BlockSize int `json:"blockSize"`
-	// CompactionExpandLimitFactor limits compaction size after expanded.  This
-	// will be multiplied by table size limit at compaction target level.
+	// CompactionExpandLimitFactor limits compaction size after expanded.
+	// This will be multiplied by table size limit at compaction target level.
+	//
+	// The default value is 25.
 	CompactionExpandLimitFactor int `json:"compactionExpandLimitFactor"`
 	// CompactionGPOverlapsFactor limits overlaps in grandparent (Level + 2)
 	// that a single 'sorted table' generates.  This will be multiplied by
 	// table size limit at grandparent level.
+	//
+	// The default value is 10.
 	CompactionGPOverlapsFactor int `json:"compactionGPOverlapsFactor"`
 	// CompactionL0Trigger defines number of 'sorted table' at level-0 that will
 	// trigger compaction.
+	//
+	// The default value is 4.
 	CompactionL0Trigger int `json:"compactionL0Trigger"`
-	// CompactionSourceLimitFactor limits compaction source size. This doesn't
-	// apply to level-0.  This will be multiplied by table size limit at
-	// compaction target level.
+	// CompactionSourceLimitFactor limits compaction source size. This doesn't apply to
+	// level-0.
+	// This will be multiplied by table size limit at compaction target level.
+	//
+	// The default value is 1.
 	CompactionSourceLimitFactor int `json:"compactionSourceLimitFactor"`
-	// CompactionTableSize limits size of 'sorted table' that compaction
-	// generates.  The limits for each level will be calculated as:
+	// CompactionTableSize limits size of 'sorted table' that compaction generates.
+	// The limits for each level will be calculated as:
 	//   CompactionTableSize * (CompactionTableSizeMultiplier ^ Level)
-	// The multiplier for each level can also fine-tuned using
-	// CompactionTableSizeMultiplierPerLevel.
+	// The multiplier for each level can also fine-tuned using CompactionTableSizeMultiplierPerLevel.
+	//
+	// The default value is 2MiB.
 	CompactionTableSize int `json:"compactionTableSize"`
 	// CompactionTableSizeMultiplier defines multiplier for CompactionTableSize.
-	CompactionTableSizeMultiplier         float64   `json:"compactionTableSizeMultiplier"`
+	//
+	// The default value is 1.
+	CompactionTableSizeMultiplier float64 `json:"compactionTableSizeMultiplier"`
+	// CompactionTableSizeMultiplierPerLevel defines per-level multiplier for
+	// CompactionTableSize.
+	// Use zero to skip a level.
+	//
+	// The default value is nil.
 	CompactionTableSizeMultiplierPerLevel []float64 `json:"compactionTableSizeMultiplierPerLevel"`
 	// CompactionTotalSize limits total size of 'sorted table' for each level.
 	// The limits for each level will be calculated as:
 	//   CompactionTotalSize * (CompactionTotalSizeMultiplier ^ Level)
 	// The multiplier for each level can also fine-tuned using
 	// CompactionTotalSizeMultiplierPerLevel.
+	//
+	// The default value is 10MiB.
 	CompactionTotalSize int `json:"compactionTotalSize"`
 	// CompactionTotalSizeMultiplier defines multiplier for CompactionTotalSize.
+	//
+	// The default value is 10.
 	CompactionTotalSizeMultiplier float64 `json:"compactionTotalSizeMultiplier"`
 	// OpenFilesCacheCapacity defines the capacity of the open files caching.
+	// Use -1 for zero, this has same effect as specifying NoCacher to OpenFilesCacher.
+	//
+	// The default value is 1024.
 	OpenFilesCacheCapacity int `json:"openFilesCacheCapacity"`
-	// There are two buffers of size WriteBuffer used.
+	// WriteBuffer defines maximum size of a 'memdb' before flushed to
+	// 'sorted table'. 'memdb' is an in-memory DB backed by an on-disk
+	// unsorted journal.
+	//
+	// LevelDB may held up to two 'memdb' at the same time.
+	//
+	// The default value is 6MiB.
 	WriteBuffer      int `json:"writeBuffer"`
 	FilterBitsPerKey int `json:"filterBitsPerKey"`
 }
@@ -110,7 +144,7 @@ func New(file string, configBytes []byte, log logging.Logger) (database.Database
 	}
 	if len(configBytes) > 0 {
 		if err := json.Unmarshal(configBytes, &parsedConfig); err != nil {
-			return nil, fmt.Errorf("failed to parse db config: %s", err)
+			return nil, fmt.Errorf("failed to parse db config: %w", err)
 		}
 	}
 	configJSON, err := json.Marshal(&parsedConfig)
@@ -171,19 +205,28 @@ func (db *Database) NewBatch() database.Batch { return &batch{db: db} }
 
 // NewIterator creates a lexicographically ordered iterator over the database
 func (db *Database) NewIterator() database.Iterator {
-	return &iter{db.DB.NewIterator(new(util.Range), nil)}
+	return &iter{
+		db:       db,
+		Iterator: db.DB.NewIterator(new(util.Range), nil),
+	}
 }
 
 // NewIteratorWithStart creates a lexicographically ordered iterator over the
 // database starting at the provided key
 func (db *Database) NewIteratorWithStart(start []byte) database.Iterator {
-	return &iter{db.DB.NewIterator(&util.Range{Start: start}, nil)}
+	return &iter{
+		db:       db,
+		Iterator: db.DB.NewIterator(&util.Range{Start: start}, nil),
+	}
 }
 
 // NewIteratorWithPrefix creates a lexicographically ordered iterator over the
 // database ignoring keys that do not start with the provided prefix
 func (db *Database) NewIteratorWithPrefix(prefix []byte) database.Iterator {
-	return &iter{db.DB.NewIterator(util.BytesPrefix(prefix), nil)}
+	return &iter{
+		db:       db,
+		Iterator: db.DB.NewIterator(util.BytesPrefix(prefix), nil),
+	}
 }
 
 // NewIteratorWithStartAndPrefix creates a lexicographically ordered iterator
@@ -194,7 +237,10 @@ func (db *Database) NewIteratorWithStartAndPrefix(start, prefix []byte) database
 	if bytes.Compare(start, prefix) == 1 {
 		iterRange.Start = start
 	}
-	return &iter{db.DB.NewIterator(iterRange, nil)}
+	return &iter{
+		db:       db,
+		Iterator: db.DB.NewIterator(iterRange, nil),
+	}
 }
 
 // Stat returns a particular internal stat of the database.
@@ -218,8 +264,10 @@ func (db *Database) Compact(start []byte, limit []byte) error {
 	return updateError(db.DB.CompactRange(util.Range{Start: start, Limit: limit}))
 }
 
-// Close implements the Database interface
-func (db *Database) Close() error { return updateError(db.DB.Close()) }
+func (db *Database) Close() error {
+	db.closed.SetValue(true)
+	return updateError(db.DB.Close())
+}
 
 // batch is a wrapper around a levelDB batch to contain sizes.
 type batch struct {
@@ -288,16 +336,44 @@ func (r *replayer) Delete(key []byte) {
 	r.err = r.writerDeleter.Delete(key)
 }
 
-type iter struct{ iterator.Iterator }
+type iter struct {
+	db *Database
+	iterator.Iterator
 
-// Error implements the Iterator interface
-func (it *iter) Error() error { return updateError(it.Iterator.Error()) }
+	key, val []byte
+	err      error
+}
 
-// Key implements the Iterator interface
-func (it *iter) Key() []byte { return utils.CopyBytes(it.Iterator.Key()) }
+func (it *iter) Next() bool {
+	// Short-circuit and set an error if the underlying database has been closed.
+	if it.db.closed.GetValue() {
+		it.key = nil
+		it.val = nil
+		it.err = database.ErrClosed
+		return false
+	}
 
-// Value implements the Iterator interface
-func (it *iter) Value() []byte { return utils.CopyBytes(it.Iterator.Value()) }
+	hasNext := it.Iterator.Next()
+	if hasNext {
+		it.key = utils.CopyBytes(it.Iterator.Key())
+		it.val = utils.CopyBytes(it.Iterator.Value())
+	} else {
+		it.key = nil
+		it.val = nil
+	}
+	return hasNext
+}
+
+func (it *iter) Error() error {
+	if it.err != nil {
+		return it.err
+	}
+	return updateError(it.Iterator.Error())
+}
+
+func (it *iter) Key() []byte { return it.key }
+
+func (it *iter) Value() []byte { return it.val }
 
 func updateError(err error) error {
 	switch err {

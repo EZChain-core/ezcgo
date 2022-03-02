@@ -4,7 +4,6 @@
 package avm
 
 import (
-	"bytes"
 	"container/list"
 	"encoding/json"
 	"errors"
@@ -34,6 +33,7 @@ import (
 	"github.com/ava-labs/avalanchego/version"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/components/index"
+	"github.com/ava-labs/avalanchego/vms/components/keystore"
 	"github.com/ava-labs/avalanchego/vms/components/verify"
 	"github.com/ava-labs/avalanchego/vms/nftfx"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
@@ -46,7 +46,6 @@ const (
 	batchTimeout       = time.Second
 	batchSize          = 30
 	assetToFxCacheSize = 1024
-	maxUTXOsToFetch    = 1024
 )
 
 var (
@@ -59,7 +58,6 @@ var (
 	_ vertex.DAGVM = &VM{}
 )
 
-// VM implements the avalanche.DAGVM interface
 type VM struct {
 	Factory
 	metrics
@@ -126,7 +124,6 @@ type Config struct {
 	IndexAllowIncomplete bool `json:"index-allow-incomplete"`
 }
 
-// Initialize implements the avalanche.DAGVM interface
 func (vm *VM) Initialize(
 	ctx *snow.Context,
 	dbManager manager.Manager,
@@ -236,9 +233,8 @@ func (vm *VM) Initialize(
 	return vm.db.Commit()
 }
 
-// Bootstrapping is called by the consensus engine when it starts bootstrapping
-// this chain
-func (vm *VM) Bootstrapping() error {
+// onBootstrapStarted is called by the consensus engine when it starts bootstrapping this chain
+func (vm *VM) onBootstrapStarted() error {
 	for _, fx := range vm.fxs {
 		if err := fx.Fx.Bootstrapping(); err != nil {
 			return err
@@ -247,9 +243,7 @@ func (vm *VM) Bootstrapping() error {
 	return nil
 }
 
-// Bootstrapped is called by the consensus engine when it is done bootstrapping
-// this chain
-func (vm *VM) Bootstrapped() error {
+func (vm *VM) onNormalOperationsStarted() error {
 	for _, fx := range vm.fxs {
 		if err := fx.Fx.Bootstrapped(); err != nil {
 			return err
@@ -259,7 +253,17 @@ func (vm *VM) Bootstrapped() error {
 	return nil
 }
 
-// Shutdown implements the avalanche.DAGVM interface
+func (vm *VM) SetState(state snow.State) error {
+	switch state {
+	case snow.Bootstrapping:
+		return vm.onBootstrapStarted()
+	case snow.NormalOp:
+		return vm.onNormalOperationsStarted()
+	default:
+		return snow.ErrUnknownState
+	}
+}
+
 func (vm *VM) Shutdown() error {
 	if vm.timer == nil {
 		return nil
@@ -274,12 +278,10 @@ func (vm *VM) Shutdown() error {
 	return vm.baseDB.Close()
 }
 
-// Get implements the avalanche.DAGVM interface
 func (vm *VM) Version() (string, error) {
 	return version.Current.String(), nil
 }
 
-// CreateHandlers implements the avalanche.DAGVM interface
 func (vm *VM) CreateHandlers() (map[string]*common.HTTPHandler, error) {
 	codec := cjson.NewCodec()
 
@@ -308,7 +310,6 @@ func (vm *VM) CreateHandlers() (map[string]*common.HTTPHandler, error) {
 	}, err
 }
 
-// CreateStaticHandlers implements the common.StaticVM interface
 func (vm *VM) CreateStaticHandlers() (map[string]*common.HTTPHandler, error) {
 	newServer := rpc.NewServer()
 	codec := cjson.NewCodec()
@@ -322,7 +323,6 @@ func (vm *VM) CreateStaticHandlers() (map[string]*common.HTTPHandler, error) {
 	}, newServer.RegisterService(staticService, "avm")
 }
 
-// Pending implements the avalanche.DAGVM interface
 func (vm *VM) PendingTxs() []snowstorm.Tx {
 	vm.timer.Cancel()
 
@@ -331,12 +331,10 @@ func (vm *VM) PendingTxs() []snowstorm.Tx {
 	return txs
 }
 
-// Parse implements the avalanche.DAGVM interface
 func (vm *VM) ParseTx(b []byte) (snowstorm.Tx, error) {
 	return vm.parseTx(b)
 }
 
-// Get implements the avalanche.DAGVM interface
 func (vm *VM) GetTx(txID ids.ID) (snowstorm.Tx, error) {
 	tx := &UniqueTx{
 		vm:   vm,
@@ -372,118 +370,13 @@ func (vm *VM) IssueTx(b []byte) (ids.ID, error) {
 	return tx.ID(), nil
 }
 
-// getPaginatedUTXOs returns UTXOs such that at least one of the addresses in [addrs] is referenced.
-// Returns at most [limit] UTXOs.
-// If [limit] <= 0 or [limit] > maxUTXOsToFetch, it is set to [maxUTXOsToFetch].
-// Only returns UTXOs associated with addresses >= [startAddr].
-// For address [startAddr], only returns UTXOs whose IDs are greater than [startUTXOID].
-// Returns:
-// * The fetched UTXOs
-// * The address associated with the last UTXO fetched
-// * The ID of the last UTXO fetched
-func (vm *VM) getPaginatedUTXOs(
-	addrs ids.ShortSet,
-	startAddr ids.ShortID,
-	startUTXOID ids.ID,
-	limit int,
-) ([]*avax.UTXO, ids.ShortID, ids.ID, error) {
-	if limit <= 0 || limit > maxUTXOsToFetch {
-		limit = maxUTXOsToFetch
+func (vm *VM) issueStopVertex() error {
+	select {
+	case vm.toEngine <- common.StopVertex:
+	default:
+		vm.ctx.Log.Debug("dropping common.StopVertex message to engine due to contention")
 	}
-	lastAddr := ids.ShortEmpty
-	lastIndex := ids.Empty
-	searchSize := limit // maximum number of utxos that can be returned
-
-	utxos := make([]*avax.UTXO, 0, limit)
-	seen := make(ids.Set, limit) // IDs of UTXOs already in the list
-
-	// enforces the same ordering for pagination
-	addrsList := addrs.SortedList()
-
-	for _, addr := range addrsList {
-		start := ids.Empty
-		if comp := bytes.Compare(addr.Bytes(), startAddr.Bytes()); comp == -1 { // Skip addresses before [startAddr]
-			continue
-		} else if comp == 0 {
-			start = startUTXOID
-		}
-
-		// Get UTXOs associated with [addr]. [searchSize] is used here to ensure
-		// that no UTXOs are dropped due to duplicated fetching.
-		utxoIDs, err := vm.state.UTXOIDs(addr.Bytes(), start, searchSize)
-		if err != nil {
-			return nil, ids.ShortID{}, ids.ID{}, fmt.Errorf("couldn't get UTXOs for address %s: %w", addr, err)
-		}
-		for _, utxoID := range utxoIDs {
-			lastIndex = utxoID // The last searched UTXO - not the last found
-			lastAddr = addr    // The last address searched that has UTXOs (even duplicated) - not the last found
-
-			if seen.Contains(utxoID) { // Already have this UTXO in the list
-				continue
-			}
-
-			utxo, err := vm.state.GetUTXO(utxoID)
-			if err != nil {
-				return nil, ids.ShortID{}, ids.ID{}, fmt.Errorf("couldn't get UTXO %s: %w", utxoID, err)
-			}
-
-			utxos = append(utxos, utxo)
-			seen.Add(utxoID)
-			limit--
-			if limit <= 0 {
-				return utxos, lastAddr, lastIndex, nil // Found [limit] utxos; stop.
-			}
-		}
-	}
-	return utxos, lastAddr, lastIndex, nil // Didn't reach the [limit] utxos; no more were found
-}
-
-func (vm *VM) getAllUTXOs(addrs ids.ShortSet) ([]*avax.UTXO, error) {
-	seen := make(ids.Set, maxUTXOsToFetch) // IDs of UTXOs already in the list
-	utxos := make([]*avax.UTXO, 0, maxUTXOsToFetch)
-
-	// enforces the same ordering for pagination
-	addrsList := addrs.SortedList()
-
-	// iterate over the addresses and get all the utxos
-	for _, addr := range addrsList {
-		if err := vm.getAllUniqueAddressUTXOs(addr, &seen, &utxos); err != nil {
-			return nil, fmt.Errorf("couldn't get UTXOs for address %s: %w", addr, err)
-		}
-	}
-	return utxos, nil
-}
-
-func (vm *VM) getAllUniqueAddressUTXOs(addr ids.ShortID, seen *ids.Set, utxos *[]*avax.UTXO) error {
-	lastIndex := ids.Empty
-	addrBytes := addr.Bytes()
-
-	for {
-		utxoIDs, err := vm.state.UTXOIDs(addrBytes, lastIndex, maxUTXOsToFetch) // Get UTXOs associated with [addr]
-		if err != nil {
-			return err
-		}
-
-		// There are no more UTXO IDs to fetch
-		if len(utxoIDs) == 0 || utxoIDs[len(utxoIDs)-1] == lastIndex {
-			return nil
-		}
-
-		lastIndex = utxoIDs[len(utxoIDs)-1]
-
-		for _, utxoID := range utxoIDs {
-			if seen.Contains(utxoID) { // Already have this UTXO in the list
-				continue
-			}
-
-			utxo, err := vm.state.GetUTXO(utxoID)
-			if err != nil {
-				return err
-			}
-			*utxos = append(*utxos, utxo)
-			seen.Add(utxoID)
-		}
-	}
+	return nil
 }
 
 /*
@@ -782,27 +675,25 @@ func (vm *VM) LoadUser(
 	*secp256k1fx.Keychain,
 	error,
 ) {
-	db, err := vm.ctx.Keystore.GetDatabase(username, password)
+	user, err := keystore.NewUserFromKeystore(vm.ctx.Keystore, username, password)
 	if err != nil {
-		return nil, nil, fmt.Errorf("problem retrieving user: %w", err)
+		return nil, nil, err
 	}
 	// Drop any potential error closing the database to report the original
 	// error
-	defer db.Close()
+	defer user.Close()
 
-	user := userState{vm: vm}
-
-	kc, err := user.Keychain(db, addrsToUse)
+	kc, err := keystore.GetKeychain(user, addrsToUse)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	utxos, err := vm.getAllUTXOs(kc.Addresses())
+	utxos, err := avax.GetAllUTXOs(vm.state, kc.Addresses())
 	if err != nil {
 		return nil, nil, fmt.Errorf("problem retrieving user's UTXOs: %w", err)
 	}
 
-	return utxos, kc, db.Close()
+	return utxos, kc, user.Close()
 }
 
 func (vm *VM) Spend(

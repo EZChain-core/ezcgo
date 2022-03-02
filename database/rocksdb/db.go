@@ -274,7 +274,6 @@ func (db *Database) Compact(start []byte, limit []byte) error {
 	return nil
 }
 
-// Close implements the Database interface
 func (db *Database) Close() error {
 	db.lock.Lock()
 	defer db.lock.Unlock()
@@ -290,6 +289,13 @@ func (db *Database) Close() error {
 
 	db.db = nil
 	return nil
+}
+
+func (db *Database) isClosed() bool {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
+
+	return db.db == nil
 }
 
 // batch is a wrapper around a levelDB batch to contain sizes.
@@ -362,17 +368,20 @@ type iterator struct {
 	started bool
 	key     []byte
 	value   []byte
+	err     error
 }
 
-// Error implements the Iterator interface
-func (it *iterator) Error() error { return it.it.Err() }
+func (it *iterator) Error() error {
+	if it.err != nil {
+		return it.err
+	}
+	return it.it.Err()
+}
 
-// Key implements the Iterator interface
 func (it *iterator) Key() []byte {
 	return utils.CopyBytes(it.key)
 }
 
-// Value implements the Iterator interface
 func (it *iterator) Value() []byte {
 	return utils.CopyBytes(it.value)
 }
@@ -387,6 +396,12 @@ func (it *iterator) Release() {
 }
 
 func (it *iterator) Next() bool {
+	if it.db.isClosed() {
+		it.key = nil
+		it.value = nil
+		it.err = database.ErrClosed
+		return false
+	}
 	if it.started {
 		it.it.Next()
 	}

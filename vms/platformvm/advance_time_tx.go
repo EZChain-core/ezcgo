@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/EZChain-core/ezcgo/vms/platformvm/reward"
 
 	safemath "github.com/ava-labs/avalanchego/utils/math"
 )
@@ -88,7 +89,7 @@ func (tx *UnsignedAdvanceTimeTx) Execute(
 
 	// Only allow timestamp to move forward as far as the time of next staker
 	// set change time
-	nextStakerChangeTime, err := vm.nextStakerChangeTime(parentState)
+	nextStakerChangeTime, err := getNextStakerChangeTime(parentState)
 	if err != nil {
 		return nil, nil, err
 	}

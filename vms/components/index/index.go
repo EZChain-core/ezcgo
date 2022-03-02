@@ -24,6 +24,9 @@ var (
 	idxCompleteKey                 = []byte("complete")
 	errIndexingRequiredFromGenesis = errors.New("running would create incomplete index. Allow incomplete indices or re-sync from genesis with indexing enabled")
 	errCausesIncompleteIndex       = errors.New("running would create incomplete index. Allow incomplete indices or enable indexing")
+
+	_ AddressTxsIndexer = &indexer{}
+	_ AddressTxsIndexer = &noIndexer{}
 )
 
 // AddressTxsIndexer maintains information about which transactions changed
@@ -51,14 +54,13 @@ type AddressTxsIndexer interface {
 	Read(address []byte, assetID ids.ID, cursor, pageSize uint64) ([]ids.ID, error)
 }
 
-// indexer implements AddressTxsIndexer
 type indexer struct {
 	log     logging.Logger
 	metrics metrics
 	db      database.Database
 }
 
-// NewIndexer Returns a new AddressTxsIndexer.
+// NewIndexer returns a new AddressTxsIndexer.
 // The returned indexer ignores UTXOs that are not type secp256k1fx.TransferOutput.
 func NewIndexer(
 	db database.Database,
@@ -138,13 +140,13 @@ func (i *indexer) Accept(txID ids.ID, inputUTXOs []*avax.UTXO, outputUTXOs []*av
 				idxBytes = make([]byte, wrappers.LongLen)
 			default:
 				// Unexpected error
-				return fmt.Errorf("unexpected error when indexing txID %s: %s", txID, err)
+				return fmt.Errorf("unexpected error when indexing txID %s: %w", txID, err)
 			}
 
 			// write the [txID] at the index
 			i.log.Verbo("writing address/assetID/index/txID %s/%s/%d/%s", address, assetID, idx, txID)
 			if err := assetPrefixDB.Put(idxBytes, txID[:]); err != nil {
-				return fmt.Errorf("failed to write txID while indexing %s: %s", txID, err)
+				return fmt.Errorf("failed to write txID while indexing %s: %w", txID, err)
 			}
 
 			// increment and store the index for next use
@@ -152,7 +154,7 @@ func (i *indexer) Accept(txID ids.ID, inputUTXOs []*avax.UTXO, outputUTXOs []*av
 			binary.BigEndian.PutUint64(idxBytes, idx)
 
 			if err := assetPrefixDB.Put(idxKey, idxBytes); err != nil {
-				return fmt.Errorf("failed to write index txID while indexing %s: %s", txID, err)
+				return fmt.Errorf("failed to write index txID while indexing %s: %w", txID, err)
 			}
 		}
 	}

@@ -21,6 +21,8 @@ import (
 	safemath "github.com/ava-labs/avalanchego/utils/math"
 )
 
+var _ heap.Interface = &benchedQueue{}
+
 // If a peer consistently does not respond to queries, it will
 // increase latencies on the network whenever that peer is polled.
 // If we cannot terminate the poll early, then the poll will wait
@@ -47,7 +49,7 @@ type benchData struct {
 	index        int
 }
 
-// Implements heap.Interface. Each element is a benched validator
+// Each element is a benched validator
 type benchedQueue []*benchData
 
 func (bq benchedQueue) Len() int           { return len(bq) }
@@ -193,7 +195,7 @@ func (b *benchlist) remove(validator *benchData) {
 	benchedStake, err := b.vdrs.SubsetWeight(b.benchlistSet)
 	if err != nil {
 		// This should never happen
-		b.log.Error("couldn't get benched stake: %w", err)
+		b.log.Error("couldn't get benched stake: %s", err)
 		return
 	}
 	b.metrics.weightBenched.Set(float64(benchedStake))
@@ -285,7 +287,7 @@ func (b *benchlist) bench(validatorID ids.ShortID) {
 	benchedStake, err := b.vdrs.SubsetWeight(b.benchlistSet)
 	if err != nil {
 		// This should never happen
-		b.log.Error("couldn't get benched stake: %w. Resetting benchlist", err)
+		b.log.Error("couldn't get benched stake: %s. Resetting benchlist", err)
 		return
 	}
 

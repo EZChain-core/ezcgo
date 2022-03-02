@@ -28,20 +28,35 @@ const (
 // UTXOState is a thin wrapper around a database to provide, caching,
 // serialization, and de-serialization for UTXOs.
 type UTXOState interface {
-	// GetUTXO attempts to load a utxo from storage.
-	GetUTXO(utxoID ids.ID) (*UTXO, error)
+	UTXOReader
+	UTXOWriter
+}
 
-	// PutUTXO saves the provided utxo to storage.
-	PutUTXO(utxoID ids.ID, utxo *UTXO) error
-
-	// DeleteUTXO deletes the provided utxo from storage.
-	DeleteUTXO(utxoID ids.ID) error
+// UTXOReader is a thin wrapper around a database to provide fetching of UTXOs.
+type UTXOReader interface {
+	UTXOGetter
 
 	// UTXOIDs returns the slice of IDs associated with [addr], starting after
 	// [previous].
 	// If [previous] is not in the list, starts at beginning.
 	// Returns at most [limit] IDs.
 	UTXOIDs(addr []byte, previous ids.ID, limit int) ([]ids.ID, error)
+}
+
+// UTXOGetter is a thin wrapper around a database to provide fetching of a UTXO.
+type UTXOGetter interface {
+	// GetUTXO attempts to load a utxo.
+	GetUTXO(utxoID ids.ID) (*UTXO, error)
+}
+
+// UTXOWriter is a thin wrapper around a database to provide storage and
+// deletion of UTXOs.
+type UTXOWriter interface {
+	// PutUTXO saves the provided utxo to storage.
+	PutUTXO(utxoID ids.ID, utxo *UTXO) error
+
+	// DeleteUTXO deletes the provided utxo.
+	DeleteUTXO(utxoID ids.ID) error
 }
 
 type utxoState struct {

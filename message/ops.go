@@ -23,7 +23,7 @@ const (
 	GetAccepted
 	Accepted
 	GetAncestors
-	MultiPut
+	Ancestors
 	// Consensus:
 	Get
 	Put
@@ -76,7 +76,7 @@ var (
 	ConsensusResponseOps = []Op{
 		AcceptedFrontier,
 		Accepted,
-		MultiPut,
+		Ancestors,
 		Put,
 		Chits,
 		AppResponse,
@@ -107,10 +107,38 @@ var (
 
 	ExternalOps = append(ConsensusExternalOps, HandshakeOps...)
 
+	SynchronousOps = []Op{
+		GetAcceptedFrontier,
+		AcceptedFrontier,
+		GetAccepted,
+		Accepted,
+		GetAncestors,
+		Ancestors,
+		Get,
+		Put,
+		PushQuery,
+		PullQuery,
+		Chits,
+		GetAcceptedFrontierFailed,
+		GetAcceptedFailed,
+		GetFailed,
+		QueryFailed,
+		GetAncestorsFailed,
+		Connected,
+		Disconnected,
+	}
+
+	AsynchronousOps = []Op{
+		AppRequest,
+		AppGossip,
+		AppRequestFailed,
+		AppResponse,
+	}
+
 	RequestToResponseOps = map[Op]Op{
 		GetAcceptedFrontier: AcceptedFrontier,
 		GetAccepted:         Accepted,
-		GetAncestors:        MultiPut,
+		GetAncestors:        Ancestors,
 		Get:                 Put,
 		PushQuery:           Chits,
 		PullQuery:           Chits,
@@ -119,7 +147,7 @@ var (
 	ResponseToFailedOps = map[Op]Op{
 		AcceptedFrontier: GetAcceptedFrontierFailed,
 		Accepted:         GetAcceptedFailed,
-		MultiPut:         GetAncestorsFailed,
+		Ancestors:        GetAncestorsFailed,
 		Put:              GetFailed,
 		Chits:            QueryFailed,
 		AppResponse:      AppRequestFailed,
@@ -127,7 +155,7 @@ var (
 	FailedToResponseOps = map[Op]Op{
 		GetAcceptedFrontierFailed: AcceptedFrontier,
 		GetAcceptedFailed:         Accepted,
-		GetAncestorsFailed:        MultiPut,
+		GetAncestorsFailed:        Ancestors,
 		GetFailed:                 Put,
 		QueryFailed:               Chits,
 		AppRequestFailed:          AppResponse,
@@ -158,7 +186,7 @@ var (
 		GetAccepted:         {ChainID, RequestID, Deadline, ContainerIDs},
 		Accepted:            {ChainID, RequestID, ContainerIDs},
 		GetAncestors:        {ChainID, RequestID, Deadline, ContainerID},
-		MultiPut:            {ChainID, RequestID, MultiContainerBytes},
+		Ancestors:           {ChainID, RequestID, MultiContainerBytes},
 		// Consensus:
 		Get:       {ChainID, RequestID, Deadline, ContainerID},
 		Put:       {ChainID, RequestID, ContainerID, ContainerBytes},
@@ -172,9 +200,9 @@ var (
 	}
 )
 
-func (op Op) Compressable() bool {
+func (op Op) Compressible() bool {
 	switch op {
-	case PeerList, Put, MultiPut, PushQuery, AppRequest, AppResponse, AppGossip:
+	case PeerList, Put, Ancestors, PushQuery, AppRequest, AppResponse, AppGossip:
 		return true
 	default:
 		return false
@@ -209,8 +237,8 @@ func (op Op) String() string {
 		return "get_ancestors"
 	case Put:
 		return "put"
-	case MultiPut:
-		return "multi_put"
+	case Ancestors:
+		return "ancestors"
 	case PushQuery:
 		return "push_query"
 	case PullQuery:

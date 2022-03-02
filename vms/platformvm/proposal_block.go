@@ -9,6 +9,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow/choices"
 	"github.com/ava-labs/avalanchego/snow/consensus/snowman"
+	"github.com/ava-labs/avalanchego/vms/platformvm/status"
 )
 
 var _ Block = &ProposalBlock{}
@@ -54,7 +55,6 @@ func (pb *ProposalBlock) Accept() error {
 	return nil
 }
 
-// Reject implements the snowman.Block interface
 func (pb *ProposalBlock) Reject() error {
 	pb.vm.ctx.Log.Verbo(
 		"Rejecting Proposal Block %s at height %d with parent %s",
@@ -137,8 +137,8 @@ func (pb *ProposalBlock) Verify() error {
 		pb.vm.droppedTxCache.Put(txID, err.Error()) // cache tx as dropped
 		return err
 	}
-	pb.onCommitState.AddTx(&pb.Tx, Committed)
-	pb.onAbortState.AddTx(&pb.Tx, Aborted)
+	pb.onCommitState.AddTx(&pb.Tx, status.Committed)
+	pb.onAbortState.AddTx(&pb.Tx, status.Aborted)
 
 	pb.timestamp = parentState.GetTimestamp()
 
