@@ -20,14 +20,12 @@ var _ pendingStakerChainState = &pendingStakerChainStateImpl{}
 type pendingStakerChainState interface {
 	GetValidatorTx(nodeID ids.ShortID) (addStakerTx *UnsignedAddValidatorTx, err error)
 	GetValidator(nodeID ids.ShortID) validator
-
 	AddStaker(addStakerTx *Tx) pendingStakerChainState
 	DeleteStakers(numToRemove int) pendingStakerChainState
 
 	// Stakers returns the list of pending validators in order of their removal
 	// from the pending staker set
 	Stakers() []*Tx
-
 	Apply(InternalState)
 }
 

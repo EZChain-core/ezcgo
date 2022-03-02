@@ -37,19 +37,14 @@ type Mempool interface {
 	Add(tx *Tx) error
 	Has(txID ids.ID) bool
 	Get(txID ids.ID) *Tx
-
 	AddDecisionTx(tx *Tx)
 	AddProposalTx(tx *Tx)
-
 	HasDecisionTxs() bool
 	HasProposalTx() bool
-
 	RemoveDecisionTxs(txs []*Tx)
 	RemoveProposalTx(tx *Tx)
-
 	PopDecisionTxs(numTxs int) []*Tx
 	PopProposalTx() *Tx
-
 	MarkDropped(txID ids.ID)
 	WasDropped(txID ids.ID) bool
 }

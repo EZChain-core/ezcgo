@@ -32,7 +32,6 @@ type currentStakerChainState interface {
 	GetNextStaker() (addStakerTx *Tx, potentialReward uint64, err error)
 	GetStaker(txID ids.ID) (tx *Tx, potentialReward uint64, err error)
 	GetValidator(nodeID ids.ShortID) (currentValidator, error)
-
 	UpdateStakers(
 		addValidators []*validatorReward,
 		addDelegators []*validatorReward,
@@ -44,9 +43,7 @@ type currentStakerChainState interface {
 	// Stakers returns the current stakers on the network sorted in order of the
 	// order of their future removal from the validator set.
 	Stakers() []*Tx
-
 	Apply(InternalState)
-
 	ValidatorSet(subnetID ids.ID) (validators.Set, error)
 }
 

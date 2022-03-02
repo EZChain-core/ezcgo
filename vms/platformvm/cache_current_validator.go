@@ -13,7 +13,6 @@ type currentValidator interface {
 	// Weight of delegations to this validator. Doesn't include the stake
 	// provided by this validator.
 	DelegatorWeight() uint64
-
 	PotentialReward() uint64
 }
 

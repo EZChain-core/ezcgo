@@ -33,7 +33,6 @@ type SignedBlock interface {
 	PChainHeight() uint64
 	Timestamp() time.Time
 	Proposer() ids.ShortID
-
 	Verify(shouldHaveProposer bool, chainID ids.ID) error
 }
 
