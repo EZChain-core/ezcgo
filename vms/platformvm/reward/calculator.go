@@ -112,11 +112,11 @@ func toEther(wei *big.Int) (v float64) {
 	return v
 }
 
-func fromEZC(v float64) (wei *big.Int) {
+func FromEZC(v float64) (wei *big.Int) {
 	return fromEther(v / 1000000000)
 }
 
-func toEZC(wei *big.Int) (v float64) {
+func ToEZC(wei *big.Int) (v float64) {
 	return toEther(wei) * 1000000000
 }
 
@@ -151,6 +151,6 @@ func reward(duration uint, stake *big.Int, totalStake *big.Int, rewardPool *big.
 	return reward.Num().Div(reward.Num(), reward.Denom())
 }
 
-func rewardEZC(duration uint, stake *big.Int, totalStake *big.Int, rewardPool *big.Int) uint64 {
-	return uint64(toEZC(reward(duration, stake, totalStake, rewardPool)))
+func RewardEZC(duration uint, stake *big.Int, totalStake *big.Int, rewardPool *big.Int) uint64 {
+	return uint64(ToEZC(reward(duration, stake, totalStake, rewardPool)))
 }

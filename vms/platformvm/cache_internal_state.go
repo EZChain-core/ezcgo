@@ -24,7 +24,7 @@ import (
 	"github.com/ava-labs/avalanchego/utils/wrappers"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
 	"github.com/ava-labs/avalanchego/vms/platformvm/status"
-	"github.com/EZChain-core/ezcgo/vms/platformvm/reward"
+	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 
 	safemath "github.com/ava-labs/avalanchego/utils/math"
 )
@@ -1599,11 +1599,11 @@ func (st *internalStateImpl) init(genesisBytes []byte) error {
 		currentStakeSupply := st.GetCurrentStakeSupply()
 		currentRewardSupply := st.GetCurrentRewardSupply()
 
-		r := rewardEZC(
+		r := reward.RewardEZC(
 			uint(stakeDuration.Seconds()),
-			fromEZC(float64(stakeAmount)),
-			fromEZC(float64(currentStakeSupply)),
-			fromEZC(float64(currentSupply)),
+			reward.FromEZC(float64(stakeAmount)),
+			reward.FromEZC(float64(currentStakeSupply)),
+			reward.FromEZC(float64(currentSupply)),
 		)
 
 		newCurrentSupply, err := safemath.Add64(currentSupply, r)

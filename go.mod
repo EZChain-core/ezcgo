@@ -13,8 +13,9 @@ require (
 	github.com/Microsoft/go-winio v0.4.16
 	github.com/NYTimes/gziphandler v1.1.1
 	github.com/ava-labs/avalanche-network-runner v1.0.5
-	github.com/ava-labs/coreth v0.8.6-rc.1
+	github.com/ava-labs/coreth v0.8.5-rc.2
 	github.com/btcsuite/btcutil v1.0.2
+	github.com/deckarep/golang-set v1.8.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v3 v3.0.0-20200627015759-01fd2de07837
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/golang/mock v1.6.0
@@ -54,4 +55,6 @@ require (
 	gotest.tools v2.2.0+incompatible
 )
 
-replace github.com/ava-labs/avalanchego => github.com/EZChain-core/ezcgo v0.0.0-20220118033902-4f65ddf3d94f
+replace (
+    github.com/ava-labs/avalanchego => github.com/EZChain-core/ezcgo v1.0.3
+)
