@@ -8,9 +8,22 @@ import (
 	"github.com/ava-labs/avalanchego/snow/choices"
 )
 
+// Whitelister defines the interface for specifying whitelisted operations.
+type Whitelister interface {
+	// Returns [true] if the underlying instance does implement whitelisted
+	// conflicts.
+	HasWhitelist() bool
+
+	// Whitelist returns the set of transaction IDs that are explicitly
+	// whitelisted. Transactions that are not explicitly whitelisted are
+	// considered conflicting.
+	Whitelist() (ids.Set, error)
+}
+
 // Tx consumes state.
 type Tx interface {
 	choices.Decidable
+	Whitelister
 
 	// Dependencies is a list of transactions upon which this transaction
 	// depends. Each element of Dependencies must be verified before Verify is

@@ -44,6 +44,8 @@ type currentStakerChainState interface {
 	// order of their future removal from the validator set.
 	Stakers() []*Tx
 	Apply(InternalState)
+
+	// Return the current validator set of [subnetID].
 	ValidatorSet(subnetID ids.ID) (validators.Set, error)
 }
 

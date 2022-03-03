@@ -32,32 +32,19 @@ import (
 	"github.com/ava-labs/avalanchego/utils/json"
 	"github.com/ava-labs/avalanchego/utils/logging"
 	"github.com/ava-labs/avalanchego/utils/timer/mockable"
-	"github.com/ava-labs/avalanchego/utils/units"
 	"github.com/ava-labs/avalanchego/utils/wrappers"
 	"github.com/ava-labs/avalanchego/version"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 	"github.com/ava-labs/avalanchego/vms/secp256k1fx"
+	"github.com/ava-labs/avalanchego/utils/units"
 
 	safemath "github.com/ava-labs/avalanchego/utils/math"
 )
 
 const (
-	// PercentDenominator is the denominator used to calculate percentages
-	PercentDenominator = 1000000
-
 	droppedTxCacheSize     = 64
 	validatorSetsCacheSize = 64
-
-	maxUTXOsToFetch = 1024
-
-	// TODO: Turn these constants into governable parameters
-
-	// MaxSubMinConsumptionRate is the % consumption that incentivizes staking
-	// longer
-	MaxSubMinConsumptionRate = 20000 // 2%
-	// MinConsumptionRate is the minimum % consumption of the remaining tokens
-	// to be minted
-	MinConsumptionRate = 100000 // 10%
 
 	// MaxValidatorWeightFactor is the maximum factor of the validator stake
 	// that is allowed to be placed on a validator.
@@ -83,7 +70,6 @@ var (
 	_ Fx                   = &secp256k1fx.Fx{}
 )
 
-// VM implements the snowman.ChainVM interface
 type VM struct {
 	Factory
 	metrics
@@ -101,12 +87,11 @@ type VM struct {
 
 	uptimeManager uptime.Manager
 
+	rewards reward.Calculator
+
 	// The context of this vm
 	ctx       *snow.Context
 	dbManager manager.Manager
-
-	// channel to send messages to the consensus engine
-	toEngine chan<- common.Message
 
 	internalState InternalState
 
@@ -148,7 +133,7 @@ func (vm *VM) Initialize(
 	genesisBytes []byte,
 	upgradeBytes []byte,
 	configBytes []byte,
-	msgs chan<- common.Message,
+	toEngine chan<- common.Message,
 	_ []*common.Fx,
 	appSender common.AppSender,
 ) error {
@@ -174,7 +159,6 @@ func (vm *VM) Initialize(
 
 	vm.ctx = ctx
 	vm.dbManager = dbManager
-	vm.toEngine = msgs
 
 	vm.codecRegistry = linearcodec.NewDefault()
 	if err := vm.fx.Initialize(vm); err != nil {
@@ -185,13 +169,14 @@ func (vm *VM) Initialize(
 	vm.validatorSetCaches = make(map[ids.ID]cache.Cacher)
 	vm.currentBlocks = make(map[ids.ID]Block)
 
-	if err := vm.blockBuilder.Initialize(vm, registerer); err != nil {
+	if err := vm.blockBuilder.Initialize(vm, toEngine, registerer); err != nil {
 		return fmt.Errorf(
 			"failed to initialize the block builder: %w",
 			err,
 		)
 	}
 	vm.network = newNetwork(vm.ApricotPhase4Time, appSender, vm)
+	vm.rewards = reward.NewCalculator(vm.RewardConfig)
 
 	is, err := NewMeteredInternalState(vm, vm.dbManager.Current().Database, genesisBytes, registerer)
 	if err != nil {
@@ -293,14 +278,14 @@ func (vm *VM) createChain(tx *Tx) error {
 	return nil
 }
 
-// Bootstrapping marks this VM as bootstrapping
-func (vm *VM) Bootstrapping() error {
+// onBootstrapStarted marks this VM as bootstrapping
+func (vm *VM) onBootstrapStarted() error {
 	vm.bootstrapped.SetValue(false)
 	return vm.fx.Bootstrapping()
 }
 
-// Bootstrapped marks this VM as bootstrapped
-func (vm *VM) Bootstrapped() error {
+// onNormalOperationsStarted marks this VM as bootstrapped
+func (vm *VM) onNormalOperationsStarted() error {
 	if vm.bootstrapped.GetValue() {
 		return nil
 	}
@@ -325,6 +310,17 @@ func (vm *VM) Bootstrapped() error {
 		return err
 	}
 	return vm.internalState.Commit()
+}
+
+func (vm *VM) SetState(state snow.State) error {
+	switch state {
+	case snow.Bootstrapping:
+		return vm.onBootstrapStarted()
+	case snow.NormalOp:
+		return vm.onNormalOperationsStarted()
+	default:
+		return snow.ErrUnknownState
+	}
 }
 
 // Shutdown this blockchain
@@ -366,7 +362,6 @@ func (vm *VM) Shutdown() error {
 // BuildBlock builds a block to be added to consensus
 func (vm *VM) BuildBlock() (snowman.Block, error) { return vm.blockBuilder.BuildBlock() }
 
-// ParseBlock implements the snowman.ChainVM interface
 func (vm *VM) ParseBlock(b []byte) (snowman.Block, error) {
 	var blk Block
 	if _, err := Codec.Unmarshal(b, &blk); err != nil {
@@ -385,7 +380,6 @@ func (vm *VM) ParseBlock(b []byte) (snowman.Block, error) {
 	return blk, nil
 }
 
-// GetBlock implements the snowman.ChainVM interface
 func (vm *VM) GetBlock(blkID ids.ID) (snowman.Block, error) { return vm.getBlock(blkID) }
 
 func (vm *VM) getBlock(blkID ids.ID) (Block, error) {
@@ -414,16 +408,6 @@ func (vm *VM) SetPreference(blkID ids.ID) error {
 
 func (vm *VM) Preferred() (Block, error) {
 	return vm.getBlock(vm.preferred)
-}
-
-// NotifyBlockReady tells the consensus engine that a new block is ready to be
-// created
-func (vm *VM) NotifyBlockReady() {
-	select {
-	case vm.toEngine <- common.PendingTxs:
-	default:
-		vm.ctx.Log.Debug("dropping message to consensus engine")
-	}
 }
 
 func (vm *VM) Version() (string, error) {
@@ -469,12 +453,10 @@ func (vm *VM) CreateStaticHandlers() (map[string]*common.HTTPHandler, error) {
 	}, nil
 }
 
-// Connected implements validators.Connector
-func (vm *VM) Connected(vdrID ids.ShortID, nodeVersion version.Application) error {
+func (vm *VM) Connected(vdrID ids.ShortID, _ version.Application) error {
 	return vm.uptimeManager.Connect(vdrID)
 }
 
-// Disconnected implements validators.Connector
 func (vm *VM) Disconnected(vdrID ids.ShortID) error {
 	if err := vm.uptimeManager.Disconnect(vdrID); err != nil {
 		return err
@@ -598,38 +580,6 @@ func (vm *VM) updateValidators() error {
 		}
 	}
 	return nil
-}
-
-// Returns the time when the next staker of any subnet starts/stops staking
-// after the current timestamp
-func (vm *VM) nextStakerChangeTime(vs ValidatorState) (time.Time, error) {
-	currentStakers := vs.CurrentStakerChainState()
-	pendingStakers := vs.PendingStakerChainState()
-
-	earliest := mockable.MaxTime
-	if currentStakers := currentStakers.Stakers(); len(currentStakers) > 0 {
-		nextStakerToRemove := currentStakers[0]
-		staker, ok := nextStakerToRemove.UnsignedTx.(TimedTx)
-		if !ok {
-			return time.Time{}, errWrongTxType
-		}
-		endTime := staker.EndTime()
-		if endTime.Before(earliest) {
-			earliest = endTime
-		}
-	}
-	if pendingStakers := pendingStakers.Stakers(); len(pendingStakers) > 0 {
-		nextStakerToAdd := pendingStakers[0]
-		staker, ok := nextStakerToAdd.UnsignedTx.(TimedTx)
-		if !ok {
-			return time.Time{}, errWrongTxType
-		}
-		startTime := staker.StartTime()
-		if startTime.Before(earliest) {
-			earliest = startTime
-		}
-	}
-	return earliest, nil
 }
 
 func (vm *VM) CodecRegistry() codec.Registry { return vm.codecRegistry }

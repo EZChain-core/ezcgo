@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/vms/components/avax"
+	"github.com/ava-labs/avalanchego/vms/platformvm/reward"
 
 	safemath "github.com/ava-labs/avalanchego/utils/math"
 )
@@ -17,7 +18,7 @@ import (
 var _ UnsignedProposalTx = &UnsignedAdvanceTimeTx{}
 
 // UnsignedAdvanceTimeTx is a transaction to increase the chain's timestamp.
-// When the chain's timestamp is updated (a AdvanceTimeTx is accepted and
+// When the chain go's timestamp is updated (a AdvanceTimeTx is accepted and
 // followed by a commit block) the staker set is also updated accordingly.
 // It must be that:
 //   * proposed timestamp > [current chain time]
@@ -88,7 +89,7 @@ func (tx *UnsignedAdvanceTimeTx) Execute(
 
 	// Only allow timestamp to move forward as far as the time of next staker
 	// set change time
-	nextStakerChangeTime, err := vm.nextStakerChangeTime(parentState)
+	nextStakerChangeTime, err := getNextStakerChangeTime(parentState)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -122,11 +123,11 @@ pendingStakerLoop:
 				break pendingStakerLoop
 			}
 
-			r := rewardEZC(
+			r := reward.RewardEZC(
 				uint(staker.Validator.Duration().Seconds()),
-				fromEZC(float64(staker.Validator.Wght)),
-				fromEZC(float64(currentStakeSupply)),
-				fromEZC(float64(currentSupply)),
+				reward.FromEZC(float64(staker.Validator.Wght)),
+				reward.FromEZC(float64(currentStakeSupply)),
+				reward.FromEZC(float64(currentSupply)),
 			)
 
 			currentSupply, err = safemath.Add64(currentSupply, r)
@@ -152,11 +153,11 @@ pendingStakerLoop:
 				break pendingStakerLoop
 			}
 
-			r := rewardEZC(
+			r := reward.RewardEZC(
 				uint(staker.Validator.Duration().Seconds()),
-				fromEZC(float64(staker.Validator.Wght)),
-				fromEZC(float64(currentStakeSupply)),
-				fromEZC(float64(currentSupply)),
+				reward.FromEZC(float64(staker.Validator.Wght)),
+				reward.FromEZC(float64(currentStakeSupply)),
+				reward.FromEZC(float64(currentSupply)),
 			)
 
 			currentSupply, err = safemath.Add64(currentSupply, r)

@@ -11,7 +11,6 @@ import (
 
 	"github.com/ava-labs/avalanchego/api/server"
 	"github.com/ava-labs/avalanchego/chains"
-	"github.com/ava-labs/avalanchego/snow"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/hashing"
 	"github.com/ava-labs/avalanchego/utils/json"
@@ -62,7 +61,7 @@ type Config struct {
 	IndexingEnabled                         bool
 	AllowIncompleteIndex                    bool
 	DecisionDispatcher, ConsensusDispatcher *triggers.EventDispatcher
-	APIServer                               server.RouteAdder
+	APIServer                               server.PathAdder
 	ShutdownF                               func()
 }
 
@@ -89,14 +88,14 @@ func NewIndexer(config Config) (Indexer, error) {
 		txIndices:            map[ids.ID]Index{},
 		vtxIndices:           map[ids.ID]Index{},
 		blockIndices:         map[ids.ID]Index{},
-		routeAdder:           config.APIServer,
+		pathAdder:            config.APIServer,
 		shutdownF:            config.ShutdownF,
 	}
 	if err := indexer.codec.RegisterCodec(
 		codecVersion,
 		linearcodec.New(reflectcodec.DefaultTagName, math.MaxUint32),
 	); err != nil {
-		return nil, fmt.Errorf("couldn't register codec: %s", err)
+		return nil, fmt.Errorf("couldn't register codec: %w", err)
 	}
 	hasRun, err := indexer.hasRun()
 	if err != nil {
@@ -106,7 +105,6 @@ func NewIndexer(config Config) (Indexer, error) {
 	return indexer, indexer.markHasRun()
 }
 
-// indexer implements Indexer
 type indexer struct {
 	codec  codec.Manager
 	clock  mockable.Clock
@@ -122,7 +120,7 @@ type indexer struct {
 	hasRunBefore bool
 
 	// Used to add API endpoint for new indices
-	routeAdder server.RouteAdder
+	pathAdder server.PathAdder
 
 	// If true, allow running in such a way that could allow the creation
 	// of an index which could be missing accepted containers.
@@ -145,10 +143,11 @@ type indexer struct {
 }
 
 // Assumes [engine]'s context lock is not held
-func (i *indexer) RegisterChain(name string, ctx *snow.ConsensusContext, engine common.Engine) {
+func (i *indexer) RegisterChain(name string, engine common.Engine) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
+	ctx := engine.Context()
 	if i.closed {
 		i.log.Debug("not registering chain %s because indexer is closed", name)
 		return
@@ -295,7 +294,7 @@ func (i *indexer) registerChainHelper(
 		return nil, err
 	}
 	handler := &common.HTTPHandler{LockOptions: common.NoLock, Handler: apiServer}
-	if err := i.routeAdder.AddRoute(handler, &sync.RWMutex{}, "index/"+name, "/"+endpoint, i.log); err != nil {
+	if err := i.pathAdder.AddRoute(handler, &sync.RWMutex{}, "index/"+name, "/"+endpoint, i.log); err != nil {
 		_ = index.Close()
 		return nil, err
 	}
