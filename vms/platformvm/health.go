@@ -9,7 +9,7 @@ import (
 
 // MinConnectedStake is the minimum percentage of the Primary Network's that
 // this node must be connected to to be considered healthy
-const MinConnectedStake = .72
+const MinConnectedStake = .80
 
 func (vm *VM) HealthCheck() (interface{}, error) {
 	// Returns nil if this node is connected to > alpha percent of the Primary Network's stake
