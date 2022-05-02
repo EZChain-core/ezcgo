@@ -38,6 +38,7 @@ import (
 	"github.com/ava-labs/avalanchego/snow/validators"
 	"github.com/ava-labs/avalanchego/utils/constants"
 	"github.com/ava-labs/avalanchego/utils/logging"
+	"github.com/ava-labs/avalanchego/version"
 	"github.com/ava-labs/avalanchego/vms"
 	"github.com/ava-labs/avalanchego/vms/metervm"
 	"github.com/ava-labs/avalanchego/vms/proposervm"
@@ -61,6 +62,7 @@ var (
 	errUnknownChainID   = errors.New("unknown chain ID")
 	errUnknownVMType    = errors.New("the vm should have type avalanche.DAGVM or snowman.ChainVM")
 	errCreatePlatformVM = errors.New("attempted to create a chain running the PlatformVM")
+	errNotBootstrapped  = errors.New("chains not bootstrapped")
 
 	_ Manager = &manager{}
 )
@@ -98,6 +100,7 @@ type Manager interface {
 
 	// Returns true iff the chain with the given ID exists and is finished bootstrapping
 	IsBootstrapped(ids.ID) bool
+
 	Shutdown()
 }
 
@@ -148,9 +151,9 @@ type ManagerConfig struct {
 	AtomicMemory                *atomic.Memory
 	AVAXAssetID                 ids.ID
 	XChainID                    ids.ID
-	CriticalChains              ids.Set          // Chains that can't exit gracefully
-	WhitelistedSubnets          ids.Set          // Subnets to validate
-	TimeoutManager              *timeout.Manager // Manages request timeouts when sending messages to other validators
+	CriticalChains              ids.Set         // Chains that can't exit gracefully
+	WhitelistedSubnets          ids.Set         // Subnets to validate
+	TimeoutManager              timeout.Manager // Manages request timeouts when sending messages to other validators
 	Health                      health.Registerer
 	RetryBootstrap              bool                    // Should Bootstrap be retried
 	RetryBootstrapWarnFrequency int                     // Max number of times to retry bootstrap before warning the node operator
@@ -310,6 +313,13 @@ func (m *manager) ForceCreateChain(chainParams ChainParameters) {
 	if err != nil {
 		chain.Handler.StopWithError(err)
 	}
+
+	// Register bootstrapped health checks after P chain is started.
+	if chainParams.ID == constants.PlatformChainID {
+		if err := m.registerBootstrappedHealthChecks(); err != nil {
+			chain.Handler.StopWithError(err)
+		}
+	}
 }
 
 // Create a chain
@@ -322,11 +332,7 @@ func (m *manager) buildChain(chainParams ChainParameters, sb Subnet) (*chain, er
 	if chainParams.ID != constants.PlatformChainID && vmID == constants.PlatformVMID {
 		return nil, errCreatePlatformVM
 	}
-
-	primaryAlias, err := m.PrimaryAlias(chainParams.ID)
-	if err != nil {
-		primaryAlias = chainParams.ID.String()
-	}
+	primaryAlias := m.PrimaryAliasOrDefault(chainParams.ID)
 
 	// Create the log and context of the chain
 	chainLog, err := m.LogFactory.MakeChain(primaryAlias)
@@ -539,6 +545,11 @@ func (m *manager) createAvalancheChain(
 	// VM uses this channel to notify engine that a block is ready to be made
 	msgChan := make(chan common.Message, defaultChannelSize)
 
+	gossipConfig := m.GossipConfig
+	if sbConfigs, ok := m.SubnetConfigs[ctx.SubnetID]; ok && ctx.SubnetID != constants.PrimaryNetworkID {
+		gossipConfig = sbConfigs.GossipConfig
+	}
+
 	// Passes messages from the consensus engine to the network
 	sender, err := sender.New(
 		ctx,
@@ -546,7 +557,7 @@ func (m *manager) createAvalancheChain(
 		m.Net,
 		m.ManagerConfig.Router,
 		m.TimeoutManager,
-		m.GossipConfig,
+		gossipConfig,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't initialize sender: %w", err)
@@ -564,6 +575,18 @@ func (m *manager) createAvalancheChain(
 	if m.MeterVMEnabled {
 		vm = metervm.NewVertexVM(vm)
 	}
+
+	// Handles serialization/deserialization of vertices and also the
+	// persistence of vertices
+	vtxManager := state.NewSerializer(
+		state.SerializerConfig{
+			ChainID:             ctx.ChainID,
+			VM:                  vm,
+			DB:                  vertexDB,
+			Log:                 ctx.Log,
+			XChainMigrationTime: version.GetXChainMigrationTime(ctx.NetworkID),
+		},
+	)
 	if err := vm.Initialize(
 		ctx.Context,
 		vmDBManager,
@@ -576,11 +599,6 @@ func (m *manager) createAvalancheChain(
 	); err != nil {
 		return nil, fmt.Errorf("error during vm's Initialize: %w", err)
 	}
-
-	// Handles serialization/deserialization of vertices and also the
-	// persistence of vertices
-	vtxManager := &state.Serializer{}
-	vtxManager.Initialize(ctx.Context, vm, vertexDB)
 
 	sampleK := consensusParams.K
 	if uint64(sampleK) > bootstrapWeight {
@@ -663,10 +681,8 @@ func (m *manager) createAvalancheChain(
 	handler.SetConsensus(engine)
 
 	// Register health check for this chain
-	chainAlias, err := m.PrimaryAlias(ctx.ChainID)
-	if err != nil {
-		chainAlias = ctx.ChainID.String()
-	}
+	chainAlias := m.PrimaryAliasOrDefault(ctx.ChainID)
+
 	// Grab the context lock before calling the chain's health check
 	check := health.CheckerFunc(func() (interface{}, error) {
 		ctx.Lock.Lock()
@@ -688,7 +704,7 @@ func (m *manager) createAvalancheChain(
 		Name:    chainAlias,
 		Engine:  engine,
 		Handler: handler,
-	}, err
+	}, nil
 }
 
 // Create a linear chain using the Snowman consensus engine
@@ -725,6 +741,11 @@ func (m *manager) createSnowmanChain(
 	// VM uses this channel to notify engine that a block is ready to be made
 	msgChan := make(chan common.Message, defaultChannelSize)
 
+	gossipConfig := m.GossipConfig
+	if sbConfigs, ok := m.SubnetConfigs[ctx.SubnetID]; ok && ctx.SubnetID != constants.PrimaryNetworkID {
+		gossipConfig = sbConfigs.GossipConfig
+	}
+
 	// Passes messages from the consensus engine to the network
 	sender, err := sender.New(
 		ctx,
@@ -732,7 +753,7 @@ func (m *manager) createSnowmanChain(
 		m.Net,
 		m.ManagerConfig.Router,
 		m.TimeoutManager,
-		m.GossipConfig,
+		gossipConfig,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't initialize sender: %w", err)
@@ -867,10 +888,7 @@ func (m *manager) createSnowmanChain(
 	handler.SetConsensus(engine)
 
 	// Register health checks
-	chainAlias, err := m.PrimaryAlias(ctx.ChainID)
-	if err != nil {
-		chainAlias = ctx.ChainID.String()
-	}
+	chainAlias := m.PrimaryAliasOrDefault(ctx.ChainID)
 
 	check := health.CheckerFunc(func() (interface{}, error) {
 		ctx.Lock.Lock()
@@ -915,6 +933,42 @@ func (m *manager) IsBootstrapped(id ids.ID) bool {
 	}
 
 	return chain.Context().GetState() == snow.NormalOp
+}
+
+func (m *manager) chainsNotBootstrapped() []ids.ID {
+	m.chainsLock.Lock()
+	defer m.chainsLock.Unlock()
+
+	chainsBootstrapping := make([]ids.ID, 0, len(m.chains))
+	for chainID, chain := range m.chains {
+		if chain.Context().GetState() == snow.NormalOp {
+			continue
+		}
+		chainsBootstrapping = append(chainsBootstrapping, chainID)
+	}
+	return chainsBootstrapping
+}
+
+func (m *manager) registerBootstrappedHealthChecks() error {
+	bootstrappedCheck := health.CheckerFunc(func() (interface{}, error) {
+		chains := m.chainsNotBootstrapped()
+		aliases := make([]string, len(chains))
+		for i, chain := range chains {
+			aliases[i] = m.PrimaryAliasOrDefault(chain)
+		}
+
+		if len(aliases) != 0 {
+			return aliases, errNotBootstrapped
+		}
+		return aliases, nil
+	})
+	if err := m.Health.RegisterReadinessCheck("bootstrapped", bootstrappedCheck); err != nil {
+		return fmt.Errorf("couldn't register bootstrapped readiness check: %w", err)
+	}
+	if err := m.Health.RegisterHealthCheck("bootstrapped", bootstrappedCheck); err != nil {
+		return fmt.Errorf("couldn't register bootstrapped health check: %w", err)
+	}
+	return nil
 }
 
 // Shutdown stops all the chains
