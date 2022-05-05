@@ -114,4 +114,4 @@ require (
 	gotest.tools v2.2.0+incompatible
 )
 
-replace github.com/ava-labs/avalanchego => github.com/EZChain-core/ezcgo v1.7.10-552022
+replace github.com/ava-labs/avalanchego => github.com/EZChain-core/ezcgo v1.7.10-552022-stake21
