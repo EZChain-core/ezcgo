@@ -49,7 +49,7 @@ const (
 
 	// MaxValidatorWeightFactor is the maximum factor of the validator stake
 	// that is allowed to be placed on a validator.
-	MaxValidatorWeightFactor uint64 = 21 //5 increase weight for delegator
+	MaxValidatorWeightFactor uint64 = 5 //5 increase weight for delegator
 
 	// SupplyCap is the maximum amount of AVAX that should ever exist
 	SupplyCap = 1000 * units.MegaAvax
